@@ -85,7 +85,7 @@ class Collator:
             'wav': wav,
             'wav_len': wav_len,
             'target_tokens_idx': torch.from_numpy(target_tokens_idx),
-            'target_len': torch.from_numpy(tokens_idx_len),
+            'target_len': tokens_idx_len,
             'mels': mels,
             'mel_len': torch.from_numpy(mel_len)
         }

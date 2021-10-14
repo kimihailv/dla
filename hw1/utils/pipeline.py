@@ -34,8 +34,8 @@ class Pipeline:
         logger_params['models'] = self.model
         self.logger = make_generic('logger', logger_params)
 
-        if self.training_params['criterion'] == 'CTCLoss':
-            self.training_params['criterion']['args']['blank'] = self.tokenizer.eps_token
+        if self.training_params['criterion']['constructor'] == 'CTCLoss':
+            self.training_params['criterion']['args']['blank'] = self.tokenizer.eps_token_id
         self.criterion = make_generic('loss', training_params['criterion'])
         self.text_decoder = TextDecoder(tokenizer)
 
@@ -69,6 +69,7 @@ class Pipeline:
 
     @torch.no_grad()
     def eval(self, loader):
+        print(loader)
         self.model.eval()
         running_loss = 0
         cer = 0
@@ -76,14 +77,16 @@ class Pipeline:
         num_samples = 0
 
         for batch in loader:
+            print(batch)
             num_samples += 1
-            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion)
+            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion, return_output=True)
             running_loss += loss.item()
 
             texts = self.text_decoder.decode(logprobs, batch['mel_len'].tolist())
             for src, tgt in zip(texts, batch['text']):
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
+                self.logger.log({'src': src, 'tgt': tgt})
 
         return running_loss / num_samples, cer / num_samples, wer / num_samples
 
