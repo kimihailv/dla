@@ -19,12 +19,12 @@ class LSTM(nn.Module):
         )
 
     def forward(self, x):
-        # N x L x C
+        # x: N x C x L
         encoded, _ = self.encoder(x.transpose(2, 1))
-        # N x C x L
+        # encoded: N x L x D
         logprobs = self.head(encoded.transpose(2, 1))
-
-        return logprobs.permute(2, 0, 1)
+        # logprobs: N x V x L
+        return logprobs
 
     def calc_loss(self, batch, device, loss, return_output=False):
         logprobs = self(batch['mels'].to(device))
@@ -33,6 +33,6 @@ class LSTM(nn.Module):
         target_len = batch['target_len'].tolist()
 
         if return_output:
-            return loss(logprobs, target, input_len, target_len), logprobs
+            return loss(logprobs.permute(2, 0, 1), target, input_len, target_len), logprobs
 
         return loss(logprobs, target, input_len, target_len)
