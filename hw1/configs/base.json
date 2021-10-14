@@ -25,7 +25,7 @@
       "load_from": "disk",
 
       "name": "librispeech-train",
-      "root_dir": "../assets",
+      "root_dir": "dla/hw1/assets",
       "sound_dir": "flac",
       "sound_ext": "flac",
       "loader": {
@@ -65,7 +65,7 @@
       "type": "hugging_face",
       "load_from": "disk",
       "name": "librispeech-val",
-      "root_dir": "../assets",
+      "root_dir": "dla/hw1/assets",
       "sound_dir": "flac",
       "sound_ext": "flac",
       "loader": {
@@ -92,7 +92,7 @@
       "type": "hugging_face",
       "load_from": "disk",
       "name": "librispeech-test",
-      "root_dir": "../assets",
+      "root_dir": "dla/hw1/assets",
       "sound_dir": "flac",
       "sound_ext": "flac",
       "loader": {
