@@ -84,7 +84,8 @@ class Pipeline:
             for src, tgt in zip(texts, batch['text']):
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
-                self.logger.log_example({'src': src, 'tgt': tgt}, mode)
+                print(f'{src} \t {tgt}')
+                self.logger.log_example(src, tgt, mode)
 
         return running_loss / num_samples, cer / num_samples, wer / num_samples
 

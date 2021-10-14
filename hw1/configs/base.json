@@ -4,8 +4,8 @@
     "constructor": "LSTM",
     "args": {
       "input_size": 128,
-      "hidden_size": 256,
-      "num_layers": 3,
+      "hidden_size": 128,
+      "num_layers": 2,
       "voc_size": -1
     }
   },
@@ -152,7 +152,7 @@
       }
     },
     "device": "cuda:0",
-    "total_epochs": 5,
+    "total_epochs": 100,
     "eval_every": 1
   }
 
