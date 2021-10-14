@@ -35,4 +35,4 @@ class LSTM(nn.Module):
         if return_output:
             return loss(logprobs.permute(2, 0, 1), target, input_len, target_len), logprobs
 
-        return loss(logprobs, target, input_len, target_len)
+        return loss(logprobs.permute(2, 0, 1), target, input_len, target_len)

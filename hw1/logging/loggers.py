@@ -15,6 +15,8 @@ class WandbLogger:
 
     def log_example(self, src, tgt, split):
         self.tables[split].add_data(src, tgt)
+
+    def push_table(self, split):
         self.run.log({f'{split}_examples': self.tables[split]})
 
     def set_summary(self, data):

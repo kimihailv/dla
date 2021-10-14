@@ -74,6 +74,7 @@ class Pipeline:
         cer = 0
         wer = 0
         num_samples = 0
+        num_texts = 0
 
         for batch in loader:
             num_samples += 1
@@ -82,12 +83,14 @@ class Pipeline:
 
             texts = self.text_decoder.decode(logprobs, batch['mel_len'].tolist())
             for src, tgt in zip(texts, batch['text']):
+                num_texts += 1
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
                 print(f'{src} \t {tgt}')
                 self.logger.log_example(src, tgt, mode)
 
-        return running_loss / num_samples, cer / num_samples, wer / num_samples
+        self.logger.push_table(mode)
+        return running_loss / num_samples, cer / num_texts, wer / num_texts
 
     def train(self):
         self.logger.watch(models=self.model)

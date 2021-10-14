@@ -30,7 +30,6 @@ def get_preprocess_fn(tokenizer, sound_dir='', sound_ext='flac', sr=22050):
 
 def get_filter_fn(max_duration, max_target_len, sr=22050):
     def filter_by_len(sample, max_duration, max_target_len, sr):
-        print(sample.keys())
         if len(sample['wav']) / sr > max_duration:
             return False
 
@@ -58,7 +57,7 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return 20
+        return 2
         # return len(self.data)
 
 
