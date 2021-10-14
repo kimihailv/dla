@@ -12,9 +12,11 @@ class LSTM(nn.Module):
         self.encoder = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                                num_layers=num_layers, batch_first=True)
         self.head = nn.Sequential(
-            nn.Conv1d(hidden_size, hidden_size * 2, 1),
+            nn.Linear(hidden_size, hidden_size * 2),
             nn.ReLU(),
-            nn.Conv1d(hidden_size * 2, voc_size, 1),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.Linear(hidden_size * 2, voc_size),
             nn.LogSoftmax(dim=-1)
         )
 
@@ -22,8 +24,8 @@ class LSTM(nn.Module):
         # x: N x C x L
         encoded, _ = self.encoder(x.transpose(2, 1))
         # encoded: N x L x D
-        logprobs = self.head(encoded.transpose(2, 1))
-        # logprobs: N x V x L
+        logprobs = self.head(encoded)
+        # logprobs: N x L x V
         return logprobs
 
     def calc_loss(self, batch, device, loss, return_output=False):
@@ -33,6 +35,6 @@ class LSTM(nn.Module):
         target_len = batch['target_len'].tolist()
 
         if return_output:
-            return loss(logprobs.permute(2, 0, 1), target, input_len, target_len), logprobs
+            return loss(logprobs.permute(1, 0, 2), target, input_len, target_len), logprobs
 
-        return loss(logprobs.permute(2, 0, 1), target, input_len, target_len)
+        return loss(logprobs.permute(1, 0, 2), target, input_len, target_len)

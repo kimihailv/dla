@@ -28,4 +28,4 @@ class TextDecoder:
 
     def pick_tokens(self, probs):
         if self.pick_by == 'argmax':
-            return torch.argmax(probs, dim=1).tolist()
+            return torch.argmax(probs, dim=-1).tolist()
