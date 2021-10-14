@@ -58,7 +58,8 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return len(self.data)
+        return 20
+        # return len(self.data)
 
 
 class Collator:

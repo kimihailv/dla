@@ -22,8 +22,8 @@ class Pipeline:
         self.device = training_params['device']
         self.train_loader, tokenizer = self.make_loader(dataset_params['train'], dataset_params['preprocess'])
         self.tokenizer = tokenizer
-        self.val_loader = self.make_loader(dataset_params['val'], dataset_params['preprocess'])
-        self.test_loader = self.make_loader(dataset_params['test'], dataset_params['preprocess'])
+        self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['preprocess'])
+        self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['preprocess'])
 
         model_params['args']['voc_size'] = len(self.tokenizer)
         self.model = make_generic('model', model_params).to(self.device)
@@ -68,8 +68,7 @@ class Pipeline:
         return running_loss / len(self.train_loader)
 
     @torch.no_grad()
-    def eval(self, loader):
-        print(loader)
+    def eval(self, loader, mode):
         self.model.eval()
         running_loss = 0
         cer = 0
@@ -77,7 +76,6 @@ class Pipeline:
         num_samples = 0
 
         for batch in loader:
-            print(batch)
             num_samples += 1
             loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion, return_output=True)
             running_loss += loss.item()
@@ -86,7 +84,7 @@ class Pipeline:
             for src, tgt in zip(texts, batch['text']):
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
-                self.logger.log({'src': src, 'tgt': tgt})
+                self.logger.log_example({'src': src, 'tgt': tgt}, mode)
 
         return running_loss / num_samples, cer / num_samples, wer / num_samples
 
@@ -101,8 +99,8 @@ class Pipeline:
             self.scheduler.step()
 
             if epoch_num % self.training_params['eval_every'] == 0:
-                train_loss, train_cer, train_wer = self.eval(self.train_loader)
-                val_loss, val_cer, val_wer = self.eval(self.val_loader)
+                train_loss, train_cer, train_wer = self.eval(self.train_loader, 'train')
+                val_loss, val_cer, val_wer = self.eval(self.val_loader, 'val')
 
                 self.logger.log({'train_cer': train_cer,
                                  'train_wer': train_wer,
@@ -117,7 +115,7 @@ class Pipeline:
                 if val_wer < best_wer:
                     best_wer = val_wer
 
-        test_loss, cer, wer = self.eval(self.test_loader)
+        test_loss, cer, wer = self.eval(self.test_loader, 'test')
         self.logger.set_summary({
             'test_loss': test_loss,
             'test_cer': cer,
