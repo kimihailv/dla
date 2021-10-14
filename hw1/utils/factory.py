@@ -78,12 +78,9 @@ def make_dataset(dataset_params, preprocess_params, tokenizer=None):
                           num_proc=2,
                           remove_columns=preprocess_params['remove_columns'])
     print('Preprocessing finished')
-    '''print(get_filter_fn(preprocess_params['max_duration'],
-                                           preprocess_params['max_target_len'],
-                                           preprocess_params['sr']))
     dataset = dataset.filter(get_filter_fn(preprocess_params['max_duration'],
                                            preprocess_params['max_target_len'],
                                            preprocess_params['sr']),
                              num_proc=1)
-    print('Filtering finished')'''
+    print('Filtering finished')
     return BaseDataset(dataset), tokenizer
