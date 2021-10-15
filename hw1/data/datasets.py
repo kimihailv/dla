@@ -18,6 +18,7 @@ def get_preprocess_fn(tokenizer, sound_dir='', sound_ext='flac', sr=22050):
         else:
             sample['wav'] = load(sample['file'], sr=sr)
         sample['target_tokens_idx'] = tokenizer.tokenize(sample['text'])
+        sample['text'] = tokenizer.filter_text(sample['text'])
 
         return sample
 
@@ -57,7 +58,7 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return 1
+        return 20
         # return len(self.data)
 
 

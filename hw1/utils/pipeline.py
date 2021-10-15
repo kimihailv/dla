@@ -89,10 +89,12 @@ class Pipeline:
                 num_texts += 1
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
-                print(f'src: {src} \t| tgt: {tgt}')
 
             if samples_to_log > 0:
                 sample_idx = np.random.choice(len(texts))
+                src = texts[sample_idx]
+                tgt = batch['text'][sample_idx]
+                print(f'src: {src} \t| tgt: {tgt}')
                 self.logger.add_row(batch['wavs'][sample_idx], texts[sample_idx],
                                     batch['text'][sample_idx], mode)
                 samples_to_log -= 1
