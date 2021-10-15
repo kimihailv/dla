@@ -19,7 +19,7 @@ inventory = {
 
     'scheduler': {
         'CosineAnnealingLR': torch.optim.lr_scheduler.CosineAnnealingLR,
-        'OneCycle': torch.optim.lr_scheduler.OneCycleLR
+        'OneCycleLR': torch.optim.lr_scheduler.OneCycleLR
     },
 
     'loss': {

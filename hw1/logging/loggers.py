@@ -4,17 +4,19 @@ import wandb
 class WandbLogger:
     def __init__(self, **run_kwargs):
         self.run = wandb.init(**run_kwargs)
+        columns = ['wav', 'src', 'tgt']
         self.tables = {
-            'train': wandb.Table(columns=['src', 'tgt']),
-            'val': wandb.Table(columns=['src', 'tgt']),
-            'test': wandb.Table(columns=['src', 'tgt'])
+            'train': wandb.Table(columns=columns),
+            'val': wandb.Table(columns=columns),
+            'test': wandb.Table(columns=columns)
         }
 
     def log(self, data):
         self.run.log(data)
 
-    def log_example(self, src, tgt, split):
-        self.tables[split].add_data(src, tgt)
+    def add_row(self, wav, src, tgt, split):
+        wav = wandb.Audio(wav, sample_rate=wandb.config['dataset_params']['preprocess']['sr'])
+        self.tables[split].add_data(wav, src, tgt)
 
     def push_table(self, split):
         self.run.log({f'{split}_examples': self.tables[split]})

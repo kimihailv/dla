@@ -21,8 +21,8 @@ class LSTM(nn.Module):
         )
 
     def forward(self, x):
-        # x: N x C x L
-        encoded, _ = self.encoder(x.transpose(2, 1))
+        # x: N x L x C
+        encoded, _ = self.encoder(x)
         # encoded: N x L x D
         logprobs = self.head(encoded)
         # logprobs: N x L x V

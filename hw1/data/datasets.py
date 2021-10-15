@@ -77,19 +77,19 @@ class Collator:
             wav = item['wav']
             if self.wav_transform is not None:
                 wav = self.wav_transform(wav)
-            spec = self.mel_transform(torch.from_numpy(wav))
+            spec = self.mel_transform(wav)
 
             wavs.append(wav)
-            specs.append(spec.clamp(min=1e-5).log())
-            specs_len.append(len(spec))
+            specs.append(spec.clamp(min=1e-5).log().transpose(1, 0))
+            specs_len.append(spec.shape[0])
             targets.append(torch.from_numpy(item['target_tokens_idx']))
             targets_len.append(len(item['target_tokens_idx']))
 
         batch = {
             'wavs': wavs,
-            'targets': torch.nn.utils.rnn.pad_sequence(targets),
+            'targets': torch.nn.utils.rnn.pad_sequence(targets, batch_first=True),
             'targets_len': targets_len,
-            'specs': torch.nn.utils.rnn.pad_sequence(specs),
+            'specs': torch.nn.utils.rnn.pad_sequence(specs, batch_first=True),
             'specs_len': specs_len
         }
 

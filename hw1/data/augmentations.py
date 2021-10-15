@@ -38,15 +38,13 @@ class MelTransform:
         self.mel_spectogram = MelSpectrogram(**mel_spectogram_kwargs)
         self.transform = transform
 
-    def __call__(self, wav, wav_len):
+    def __call__(self, wav):
         mels = self.mel_spectogram(torch.from_numpy(wav).float())
-        mels_len = (wav_len - self.mel_spectogram.win_length) // self.mel_spectogram.hop_length
-        mels_len += 5
 
         if self.transform is not None:
             mels = self.transform(mels)
 
-        return mels, mels_len
+        return mels
 
 
 class Compose:

@@ -7,6 +7,7 @@ from json import load
 from tqdm import tqdm
 from os import environ
 from copy import deepcopy
+import numpy as np
 
 
 class Pipeline:
@@ -60,6 +61,8 @@ class Pipeline:
             loss = self.model.calc_loss(batch, self.device, self.criterion)
             loss.backward()
             self.optimizer.step()
+            self.scheduler.step()
+
             loss_v = loss.item()
             self.logger.log({'train_iter_loss': loss_v})
             num_samples += 1
@@ -70,6 +73,7 @@ class Pipeline:
     @torch.no_grad()
     def eval(self, loader, mode):
         self.model.eval()
+        samples_to_log = 5
         running_loss = 0
         cer = 0
         wer = 0
@@ -86,8 +90,13 @@ class Pipeline:
                 num_texts += 1
                 cer += calc_cer(src, tgt)
                 wer += calc_wer(src, tgt)
-                print(f'{src} \t {tgt}')
-                self.logger.log_example(src, tgt, mode)
+                print(f'src: {src} \t| tgt: {tgt}')
+
+            if samples_to_log > 0:
+                sample_idx = np.random.choice(len(texts))
+                self.logger.add_row(batch['wav'][sample_idx], texts[sample_idx],
+                                    batch['text'][sample_idx], mode)
+                samples_to_log -= 1
 
         self.logger.push_table(mode)
         return running_loss / num_samples, cer / num_texts, wer / num_texts
@@ -100,7 +109,6 @@ class Pipeline:
         for epoch_num in range(self.training_params['total_epochs']):
             train_loss = self.train_one_epoch()
             self.logger.log({'train_epoch_loss': train_loss})
-            self.scheduler.step()
 
             if epoch_num % self.training_params['eval_every'] == 0:
                 train_loss, train_cer, train_wer = self.eval(self.train_loader, 'train')
