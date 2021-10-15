@@ -15,7 +15,7 @@ class WandbLogger:
         self.run.log(data)
 
     def add_row(self, wav, src, tgt, split):
-        wav = wandb.Audio(wav, sample_rate=wandb.config['dataset_params']['preprocess']['sr'])
+        wav = wandb.Audio(wav, sample_rate=self.run.config['dataset_params']['preprocess']['sr'])
         self.tables[split].add_data(wav, src, tgt)
 
     def push_table(self, split):

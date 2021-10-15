@@ -118,22 +118,21 @@
   },
 
   "optimizer_params": {
-    "constructor": "SGD",
+    "constructor": "Adam",
     "args": {
       "params": null,
-      "lr": 3e-4,
-      "momentum": 0.9,
-      "nesterov": true,
+      "lr": 1e-2,
       "weight_decay": 0
     }
   },
 
   "scheduler_params": {
-    "constructor": "CosineAnnealingLR",
+    "constructor": "OneCycleLR",
     "args": {
       "optimizer": null,
-      "T_max": 500,
-      "eta_min": 1e-6
+      "max_lr": 0.01,
+      "epochs": 500,
+      "steps_per_epoch": 5
     }
   },
 

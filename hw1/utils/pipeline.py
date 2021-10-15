@@ -64,7 +64,7 @@ class Pipeline:
             self.scheduler.step()
 
             loss_v = loss.item()
-            self.logger.log({'train_iter_loss': loss_v})
+            self.logger.log({'train_iter_loss': loss_v, 'lr': self.scheduler.get_last_lr()[0]})
             num_samples += 1
             running_loss += loss_v
 
@@ -94,7 +94,7 @@ class Pipeline:
 
             if samples_to_log > 0:
                 sample_idx = np.random.choice(len(texts))
-                self.logger.add_row(batch['wav'][sample_idx], texts[sample_idx],
+                self.logger.add_row(batch['wavs'][sample_idx], texts[sample_idx],
                                     batch['text'][sample_idx], mode)
                 samples_to_log -= 1
 
