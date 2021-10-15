@@ -14,6 +14,7 @@ inventory = {
 
     'optimizer': {
         'Adam': torch.optim.Adam,
+        'AdamW': torch.optim.AdamW,
         'SGD': torch.optim.SGD
     },
 

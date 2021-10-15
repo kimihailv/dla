@@ -80,7 +80,7 @@ class Collator:
             spec = self.mel_transform(wav)
 
             wavs.append(wav)
-            specs.append(spec.clamp(min=1e-5).log().transpose(1, 0))
+            specs.append(spec.transpose(1, 0))
             specs_len.append(spec.shape[1])
             targets.append(torch.from_numpy(item['target_tokens_idx']))
             targets_len.append(len(item['target_tokens_idx']))

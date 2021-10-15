@@ -61,7 +61,6 @@ class Pipeline:
             loss = self.model.calc_loss(batch, self.device, self.criterion)
             loss.backward()
             self.optimizer.step()
-            self.scheduler.step()
 
             loss_v = loss.item()
             self.logger.log({'train_iter_loss': loss_v, 'lr': self.scheduler.get_last_lr()[0]})
@@ -108,6 +107,8 @@ class Pipeline:
 
         for epoch_num in range(self.training_params['total_epochs']):
             train_loss = self.train_one_epoch()
+            self.scheduler.step()
+
             self.logger.log({'train_epoch_loss': train_loss})
 
             if epoch_num % self.training_params['eval_every'] == 0:

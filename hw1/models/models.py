@@ -10,9 +10,9 @@ class LSTM(nn.Module):
                  voc_size):
         super().__init__()
         self.encoder = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                               num_layers=num_layers, batch_first=True)
+                               num_layers=num_layers, bidirectional=True, batch_first=True)
         self.head = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
             nn.ReLU(),
             nn.Linear(hidden_size * 2, hidden_size * 2),
             nn.ReLU(),

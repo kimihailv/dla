@@ -118,13 +118,11 @@
   },
 
   "optimizer_params": {
-    "constructor": "SGD",
+    "constructor": "AdamW",
     "args": {
       "params": null,
-      "lr": 3e-3,
-      "momentum": 0.9,
-      "nesterov": true,
-      "weight_decay": 0
+      "lr": 3e-4,
+      "weight_decay": 1e-6
     }
   },
 
