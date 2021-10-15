@@ -130,7 +130,7 @@
     "constructor": "CosineAnnealingLR",
     "args": {
       "optimizer": null,
-      "T_max": 1000,
+      "T_max": 2000,
       "eta_min": 5e-7
     }
   },
