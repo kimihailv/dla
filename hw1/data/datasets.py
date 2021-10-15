@@ -57,7 +57,7 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return 20
+        return 1
         # return len(self.data)
 
 
