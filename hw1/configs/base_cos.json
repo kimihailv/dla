@@ -5,7 +5,7 @@
     "args": {
       "input_size": 128,
       "hidden_size": 512,
-      "num_layers": 3,
+      "num_layers": 5,
       "voc_size": -1
     }
   },
@@ -54,9 +54,9 @@
         "constructor": "MelTransform",
         "args": {
           "sample_rate": 16000,
-          "n_fft": 320,
-          "win_length": 320,
-          "hop_length": 100,
+          "n_fft": 400,
+          "win_length": 400,
+          "hop_length": 200,
           "n_mels": 128
         }
       }
