@@ -3,9 +3,9 @@
   "model_params": {
     "constructor": "LSTM",
     "args": {
-      "input_size": 128,
-      "hidden_size": 512,
-      "num_layers": 5,
+      "input_size": 64,
+      "hidden_size": 256,
+      "num_layers": 4,
       "voc_size": -1
     }
   },
@@ -57,7 +57,7 @@
           "n_fft": 400,
           "win_length": 400,
           "hop_length": 200,
-          "n_mels": 128
+          "n_mels": 64
         }
       }
     },
@@ -81,10 +81,10 @@
         "constructor": "MelTransform",
         "args": {
           "sample_rate": 16000,
-          "n_fft": 320,
-          "win_length": 320,
-          "hop_length": 100,
-          "n_mels": 128
+          "n_fft": 400,
+          "win_length": 400,
+          "hop_length": 200,
+          "n_mels": 64
         }
       }
     },
@@ -108,10 +108,10 @@
         "constructor": "MelTransform",
         "args": {
           "sample_rate": 16000,
-          "n_fft": 320,
-          "win_length": 320,
-          "hop_length": 100,
-          "n_mels": 128
+          "n_fft": 400,
+          "win_length": 400,
+          "hop_length": 200,
+          "n_mels": 64
         }
       }
     }
@@ -121,7 +121,7 @@
     "constructor": "AdamW",
     "args": {
       "params": null,
-      "lr": 3e-4,
+      "lr": 3e-5,
       "weight_decay": 1e-7
     }
   },
