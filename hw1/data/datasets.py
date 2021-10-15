@@ -67,27 +67,30 @@ class Collator:
         self.mel_transform = mel_transform
 
     def __call__(self, samples):
+        specs = []
+        targets = []
         wavs = []
-        tokens_idx = []
+        specs_len = []
+        targets_len = []
 
         for item in samples:
             wav = item['wav']
             if self.wav_transform is not None:
                 wav = self.wav_transform(wav)
+            spec = self.mel_transform(torch.from_numpy(wav))
 
             wavs.append(wav)
-            tokens_idx.append(item['target_tokens_idx'])
+            specs.append(spec.clamp(min=1e-5).log())
+            specs_len.append(len(spec))
+            targets.append(torch.from_numpy(item['target_tokens_idx']))
+            targets_len.append(len(item['target_tokens_idx']))
 
-        wav, wav_len = self.pad(wavs)
-        target_tokens_idx, tokens_idx_len = self.pad(tokens_idx)
-        mels, mel_len = self.mel_transform(wav, wav_len)
         batch = {
-            'wav': wav,
-            'wav_len': wav_len,
-            'target_tokens_idx': torch.from_numpy(target_tokens_idx),
-            'target_len': tokens_idx_len,
-            'mels': mels.clamp(min=1e-5).log(),
-            'mel_len': torch.from_numpy(mel_len)
+            'wavs': wavs,
+            'targets': torch.nn.utils.rnn.pad_sequence(targets),
+            'targets_len': targets_len,
+            'specs': torch.nn.utils.rnn.pad_sequence(specs),
+            'specs_len': specs_len
         }
 
         for k in samples[0].keys():
@@ -99,14 +102,3 @@ class Collator:
                 batch[k].append(sample[k])
 
         return batch
-
-    @staticmethod
-    def pad(samples):
-        lengths = [len(sample) for sample in samples]
-        max_length = max(lengths)
-        data = np.zeros((len(samples), max_length))
-
-        for idx, (sample, sample_len) in enumerate(zip(samples, lengths)):
-            data[idx, :sample_len] = sample
-
-        return data, np.array(lengths)

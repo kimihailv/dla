@@ -29,10 +29,10 @@ class LSTM(nn.Module):
         return logprobs
 
     def calc_loss(self, batch, device, loss, return_output=False):
-        logprobs = self(batch['mels'].to(device))
-        target = batch['target_tokens_idx'].to(device)
-        input_len = batch['mel_len'].tolist()
-        target_len = batch['target_len'].tolist()
+        logprobs = self(batch['specs'].to(device))
+        target = batch['targets'].to(device)
+        input_len = batch['specs_len'].tolist()
+        target_len = batch['targets_len'].tolist()
 
         if return_output:
             return loss(logprobs.permute(1, 0, 2), target, input_len, target_len), logprobs
