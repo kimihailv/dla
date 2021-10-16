@@ -50,20 +50,20 @@ class Pipeline:
         collator = Collator(wav_transform, mel_transform)
         return torch.utils.data.DataLoader(dataset, collate_fn=collator, **dataset_params['loader']), tokenizer
 
-    def train_one_epoch(self):
+    def train_one_epoch(self, epoch_num):
         self.model.train()
-        bar = tqdm(self.train_loader, position=0, leave=True)
+        bar = tqdm(self.train_loader, position=0, leave=True, desc=f'Epoch #{epoch_num}')
         running_loss = 0
         num_samples = 0
 
-        for batch in bar:
+        for idx, batch in enumerate(bar):
             self.optimizer.zero_grad()
             loss = self.model.calc_loss(batch, self.device, self.criterion)
             loss.backward()
             self.optimizer.step()
 
             loss_v = loss.item()
-            self.logger.log({'train_iter_loss': loss_v, 'lr': self.scheduler.get_last_lr()[0]})
+            self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
             num_samples += 1
             running_loss += loss_v
 
@@ -94,9 +94,7 @@ class Pipeline:
                 sample_idx = np.random.choice(len(texts))
                 src = texts[sample_idx]
                 tgt = batch['text'][sample_idx]
-                print(f'src: {src} \t| tgt: {tgt}')
-                self.logger.add_row(batch['wavs'][sample_idx], texts[sample_idx],
-                                    batch['text'][sample_idx], mode)
+                self.logger.add_row(batch['wavs'][sample_idx], src, tgt, mode)
                 samples_to_log -= 1
 
         self.logger.push_table(mode)
@@ -108,10 +106,11 @@ class Pipeline:
         best_wer = 1
 
         for epoch_num in range(self.training_params['total_epochs']):
-            train_loss = self.train_one_epoch()
+            train_loss = self.train_one_epoch(epoch_num)
             self.scheduler.step()
-
-            self.logger.log({'train_epoch_loss': train_loss})
+            self.logger.log({'train_epoch_loss': train_loss,
+                             'lr': self.scheduler.get_last_lr()[0],
+                             'epoch': epoch_num})
 
             if epoch_num % self.training_params['eval_every'] == 0:
                 train_loss, train_cer, train_wer = self.eval(self.train_loader, 'train')
@@ -121,8 +120,9 @@ class Pipeline:
                                  'train_wer': train_wer,
                                  'val_loss': val_loss,
                                  'val_cer': val_cer,
-                                 'val_wer': val_wer
-                                 })
+                                 'val_wer': val_wer,
+                                 'epoch': epoch_num
+                                })
 
                 if val_cer < best_cer:
                     best_cer = val_cer
