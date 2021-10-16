@@ -10,13 +10,11 @@ class LSTM(nn.Module):
                  voc_size):
         super().__init__()
         self.prenet = torch.nn.Sequential(
-            nn.Linear(input_size, 512),
+            nn.Conv2d(1, 16, 1),
             nn.ReLU(),
-            nn.Linear(512, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, input_size * 2)
+            nn.Conv2d(16, 16, 1)
         )
-        self.encoder = nn.LSTM(input_size=input_size * 2, hidden_size=hidden_size,
+        self.encoder = nn.LSTM(input_size=input_size * 16, hidden_size=hidden_size,
                                num_layers=num_layers, bidirectional=True, batch_first=True)
         self.head = nn.Sequential(
             nn.Linear(hidden_size * 2, hidden_size * 2),
@@ -28,9 +26,12 @@ class LSTM(nn.Module):
         )
 
     def forward(self, x):
-        # x: N x L x C
+        # x: N x 1 x L x F
         x = self.prenet(x)
-        encoded, _ = self.encoder(x)
+        # x: N x C x L x F
+        bs, c, l, f = x.size()
+        x = x.transpose(3, 2).view(bs, c * f, l).contiguous()
+        encoded, _ = self.encoder(x.transpose(2, 1))
         # encoded: N x L x D
         logprobs = self.head(encoded)
         # logprobs: N x L x V
