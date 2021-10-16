@@ -30,7 +30,7 @@ class LSTM(nn.Module):
         x = self.prenet(x)
         # x: N x C x L x F
         bs, c, l, f = x.size()
-        x = x.transpose(3, 2).view(bs, c * f, l).contiguous()
+        x = x.transpose(3, 2).reshape(bs, c * f, l)
         encoded, _ = self.encoder(x.transpose(2, 1))
         # encoded: N x L x D
         logprobs = self.head(encoded)
