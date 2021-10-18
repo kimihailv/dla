@@ -1,7 +1,7 @@
 from ..data.augmentations import *
 from ..data.tokenizer import Tokenizer
 from ..data.datasets import get_preprocess_fn, get_filter_fn, BaseDataset
-from ..models import LSTM
+from ..models import *
 from ..logging import WandbLogger
 import datasets
 import torch
@@ -9,7 +9,8 @@ import torch
 datasets.set_caching_enabled(False)
 inventory = {
     'model': {
-        'LSTM': LSTM
+        'LSTM': LSTM,
+        'QuartzNet': QuartzNet
     },
 
     'optimizer': {

@@ -13,7 +13,7 @@ class ConvBnReLU(nn.Module):
         self.bn = nn.BatchNorm1d(out_channels)
 
     def forward(self, x):
-        return nn.ReLU(self.bn(self.conv(x)))
+        return F.relu(self.bn(self.conv(x)))
 
 
 class SubBlock(nn.Module):
@@ -34,13 +34,14 @@ class Block(nn.Module):
         self.shortcut = None
         if in_channels != out_channels:
             self.shortcut = nn.Sequential(
-                nn.Conv1d(in_channels, out_channels),
+                nn.Conv1d(in_channels, out_channels, 1),
                 nn.BatchNorm1d(out_channels)
             )
-        self.subblocks = [SubBlock(in_channels, out_channels, kernel_size, kernel_size // 2)]
+        pad = kernel_size // 2
+        self.subblocks = [SubBlock(in_channels, out_channels, kernel_size, pad)]
 
-        for _ in range(n_repeat):
-            self.subblocks.append(SubBlock(out_channels, out_channels, kernel_size))
+        for _ in range(n_repeat - 1):
+            self.subblocks.append(SubBlock(out_channels, out_channels, kernel_size, pad))
 
         self.subblocks = nn.Sequential(*self.subblocks)
 
@@ -49,7 +50,7 @@ class Block(nn.Module):
         if self.shortcut is not None:
             identity = self.shortcut(identity)
 
-        return self.subblocks(x) + identity
+        return F.relu(self.subblocks(x) + identity)
 
 
 class QuartzNet(nn.Module):
@@ -58,10 +59,11 @@ class QuartzNet(nn.Module):
 
     def __init__(self, in_channels, n_blocks, n_subblocks, voc_size):
         super().__init__()
-        self.conv1 = ConvBnReLU(1, 256, 33, stride=2)
+        self.conv1 = ConvBnReLU(in_channels, 256, 33, stride=2)
 
         self.blocks = []
         n_repeat_block = n_blocks // 5
+        in_channels = 256
 
         for out_channels, kernel_size in zip(self.num_channels, self.kernel_sizes):
             for _ in range(n_repeat_block):
@@ -73,7 +75,7 @@ class QuartzNet(nn.Module):
         self.final = nn.Sequential(
             ConvBnReLU(512, 512, 87),
             ConvBnReLU(512, 1024, 1),
-            ConvBnReLU(1024, voc_size, 1, dilation=2),
+            nn.Conv1d(1024, voc_size, 1),
             nn.LogSoftmax(1)
         )
 
