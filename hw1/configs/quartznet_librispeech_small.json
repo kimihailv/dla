@@ -40,13 +40,6 @@
           "constructor": "AddNoise",
           "apply_prob": 0.5,
           "args": {}
-        },
-        {
-          "constructor": "PitchShift",
-          "apply_prob": 0.5,
-          "args": {
-            "sr": 16000
-          }
         }
       ],
 

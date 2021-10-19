@@ -17,8 +17,8 @@ class WandbLogger:
             if self.prev_tables[split] is not None:
                 for _, row in self.prev_tables[split].iterrows():
                     history.append(row)
-
-            history.append([epoch, wandb.Audio(wav), wandb.Image(mel_spec), src, tgt])
+            sr = self.run.config['dataset_params']['preprocess']['sr']
+            history.append([epoch, wandb.Audio(wav, sample_rate=sr), wandb.Image(mel_spec), src, tgt])
             self.cur_tables[split] = wandb.Table(data=history, columns=columns)
         else:
             self.cur_tables[split].add_data(epoch, wav, src, tgt)
