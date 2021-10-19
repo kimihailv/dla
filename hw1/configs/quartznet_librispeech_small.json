@@ -44,9 +44,7 @@
         {
           "constructor": "TimeStretch",
           "apply_prob": 0.5,
-          "args": {
-            "sr": 16000
-          }
+          "args": {}
         }
       ],
 
