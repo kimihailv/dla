@@ -3,6 +3,7 @@ from ..data.tokenizer import Tokenizer
 from ..data.datasets import get_preprocess_fn, get_filter_fn, BaseDataset
 from ..models import *
 from ..logging import WandbLogger
+from torchaudio.transforms import FrequencyMasking, TimeMasking
 import datasets
 import torch
 
@@ -35,7 +36,9 @@ inventory = {
         'TimeStretch': TimeStretch,
         'MelTransform': MelTransform,
         'Compose': Compose,
-        'RandomApply': RandomApply
+        'RandomApply': RandomApply,
+        'FrequencyMasking': FrequencyMasking,
+        'TimeMasking': TimeMasking
     },
 
     'logger': {
