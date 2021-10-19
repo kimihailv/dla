@@ -5,7 +5,7 @@
     "args": {
       "in_channels": 64,
       "n_blocks": 5,
-      "n_subblocks": 5
+      "n_subblocks": 5,
       "voc_size": -1
     }
   },
@@ -22,12 +22,12 @@
 
     "train":  {
       "type": "hugging_face",
-      "load_from": "disk",
-
-      "name": "librispeech-train",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
+      "load_from": "hub",
+      "name": "librispeech_asr",
       "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "train.100",
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -51,23 +51,40 @@
       ],
 
       "mel_transform": {
-        "constructor": "MelTransform",
         "args": {
           "sample_rate": 16000,
           "n_fft": 400,
           "win_length": 400,
           "hop_length": 200,
           "n_mels": 64
-        }
+        },
+        "transform": [
+            {
+              "constructor": "FrequencyMasking",
+              "args": {
+                "freq_mask_param": 10
+              },
+              "apply_prob": 0.2
+            },
+
+            {
+              "constructor": "TimeMasking",
+              "args": {
+                "time_mask_param": 30
+              },
+              "apply_prob": 0.2
+            }
+          ]
       }
     },
     "val": {
       "type": "hugging_face",
-      "load_from": "disk",
-      "name": "librispeech-val",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
+      "load_from": "hub",
+      "name": "librispeech_asr",
       "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "valid",
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -90,11 +107,12 @@
     },
     "test": {
       "type": "hugging_face",
-      "load_from": "disk",
-      "name": "librispeech-test",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
+      "load_from": "hub",
+      "name": "librispeech_asr",
       "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "test",
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -153,7 +171,7 @@
       }
     },
     "device": "cuda:0",
-    "total_epochs": 2000,
+    "total_epochs": 200,
     "eval_every": 1
   }
 

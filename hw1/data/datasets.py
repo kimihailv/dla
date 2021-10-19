@@ -58,8 +58,7 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return 20
-        # return len(self.data)
+        return 128
 
 
 class Collator:
@@ -90,7 +89,7 @@ class Collator:
             'wavs': wavs,
             'targets': torch.nn.utils.rnn.pad_sequence(targets, batch_first=True),
             'targets_len': targets_len,
-            'specs': torch.nn.utils.rnn.pad_sequence(specs, batch_first=True).unsqueeze(1),
+            'specs': torch.nn.utils.rnn.pad_sequence(specs, batch_first=True).transpose(1, 0),
             'specs_len': specs_len
         }
 

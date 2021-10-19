@@ -73,15 +73,14 @@ class QuartzNet(nn.Module):
         self.blocks = nn.Sequential(*self.blocks)
 
         self.final = nn.Sequential(
-            ConvBnReLU(512, 512, 87),
+            SubBlock(512, 512, 87, 0),
             ConvBnReLU(512, 1024, 1),
-            nn.Conv1d(1024, voc_size, 1),
+            nn.Conv1d(1024, voc_size, kernel_size=1, dilation=2),
             nn.LogSoftmax(1)
         )
 
     def forward(self, x):
-        # x: N x 1 x L x F
-        x = self.conv1(x.squeeze(1).transpose(2, 1))
+        x = self.conv1(x)
         # x: N x C x L
         x = self.blocks(x)
         x = self.final(x)

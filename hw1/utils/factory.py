@@ -57,13 +57,27 @@ def make_aug(params):
     return RandomApply(augmentation, p=params['apply_prob'])
 
 
+def make_mel_transform(params):
+    if 'transform' in params:
+        transform = [make_aug(p) for p in params['transform']]
+        transform = Compose(*transform)
+    else:
+        transform = None
+
+    return MelTransform(transform=transform, **params["args"])
+
+
 def make_dataset(dataset_params, preprocess_params, tokenizer=None):
     if dataset_params['type'] == 'hugging_face':
         if dataset_params['load_from'] == 'disk':
             dataset_path = dataset_params['root_dir'] + '/' + dataset_params['name']
             dataset = datasets.load_from_disk(dataset_path)
         else:
-            dataset = datasets.load_dataset(dataset_params['name'])
+            if 'part' in dataset_params:
+                dataset = datasets.load_dataset(dataset_params['name'], dataset_params['part'],
+                                                split=dataset_params['split'])
+            else:
+                dataset = datasets.load_dataset(dataset_params['name'])
     else:
         dataset = None
 

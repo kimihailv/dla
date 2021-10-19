@@ -1,5 +1,5 @@
 import torch
-from .factory import make_generic, make_aug, make_dataset, Compose
+from .factory import make_generic, make_aug, make_dataset, make_mel_transform, Compose
 from ..data.datasets import Collator
 from ..eval.decoding import TextDecoder
 from ..eval.metrics import calc_cer, calc_wer
@@ -44,7 +44,7 @@ class Pipeline:
         wav_transform = None
         if len(dataset_params['aug']) > 0:
             wav_transform = Compose(*[make_aug(aug_params) for aug_params in dataset_params['aug']])
-        mel_transform = make_generic('aug', dataset_params['mel_transform'])
+        mel_transform = make_mel_transform(dataset_params["mel_transform"])
         dataset, tokenizer = make_dataset(dataset_params, preprocess_params, self.tokenizer)
 
         collator = Collator(wav_transform, mel_transform)
@@ -94,7 +94,9 @@ class Pipeline:
                 sample_idx = np.random.choice(len(texts))
                 src = texts[sample_idx]
                 tgt = batch['text'][sample_idx]
-                self.logger.add_row(batch['wavs'][sample_idx], src, tgt, mode)
+                spec_len = batch['specs_len'][sample_idx]
+                spec = batch['specs'][sample_idx][:, :spec_len].cpu().numpy()
+                self.logger.add_row(batch['wavs'][sample_idx], spec, src, tgt, mode)
                 samples_to_log -= 1
 
         self.logger.push_table(mode)
