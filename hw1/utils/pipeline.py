@@ -47,7 +47,8 @@ class Pipeline:
         mel_transform = make_mel_transform(dataset_params["mel_transform"])
         dataset, tokenizer = make_dataset(dataset_params, preprocess_params, self.tokenizer)
 
-        collator = Collator(wav_transform, mel_transform)
+        collator = Collator(wav_transform, mel_transform,
+                            input_len_div_factor=preprocess_params['input_len_div_factor'])
         return torch.utils.data.DataLoader(dataset, collate_fn=collator, **dataset_params['loader']), tokenizer
 
     def train_one_epoch(self, epoch_num):

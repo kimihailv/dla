@@ -17,7 +17,8 @@
       "sr": 16000,
       "remove_columns": [
         "chapter_id", "file", "speaker_id"
-      ]
+      ],
+      "input_len_div_factor": 2
     },
 
     "train":  {
@@ -53,9 +54,9 @@
       "mel_transform": {
         "args": {
           "sample_rate": 16000,
-          "n_fft": 400,
-          "win_length": 400,
-          "hop_length": 200,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
           "n_mels": 64
         },
         "transform": [
@@ -98,9 +99,9 @@
         "constructor": "MelTransform",
         "args": {
           "sample_rate": 16000,
-          "n_fft": 400,
-          "win_length": 400,
-          "hop_length": 200,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
           "n_mels": 64
         }
       }
@@ -172,7 +173,7 @@
     },
     "device": "cuda:0",
     "total_epochs": 200,
-    "eval_every": 1
+    "eval_every": 1,
   }
 
 }

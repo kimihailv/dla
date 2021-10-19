@@ -4,10 +4,11 @@ import torch.nn.functional as F
 
 
 class ConvBnReLU(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1, padding=0):
         super().__init__()
         self.conv = nn.Conv1d(in_channels, out_channels,
                               kernel_size=kernel_size,
+                              padding=padding,
                               stride=stride, dilation=dilation)
 
         self.bn = nn.BatchNorm1d(out_channels)
@@ -59,7 +60,7 @@ class QuartzNet(nn.Module):
 
     def __init__(self, in_channels, n_blocks, n_subblocks, voc_size):
         super().__init__()
-        self.conv1 = ConvBnReLU(in_channels, 256, 33, stride=2)
+        self.conv1 = ConvBnReLU(in_channels, 256, 33, stride=2, padding=16)
 
         self.blocks = []
         n_repeat_block = n_blocks // 5
@@ -73,7 +74,7 @@ class QuartzNet(nn.Module):
         self.blocks = nn.Sequential(*self.blocks)
 
         self.final = nn.Sequential(
-            SubBlock(512, 512, 87, 0),
+            SubBlock(512, 512, 87, 43),
             ConvBnReLU(512, 1024, 1),
             nn.Conv1d(1024, voc_size, kernel_size=1, dilation=2),
             nn.LogSoftmax(1)
