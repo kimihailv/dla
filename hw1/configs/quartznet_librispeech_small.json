@@ -40,6 +40,13 @@
           "constructor": "AddNoise",
           "apply_prob": 0.5,
           "args": {}
+        },
+        {
+          "constructor": "TimeStretch",
+          "apply_prob": 0.5,
+          "args": {
+            "sr": 16000
+          }
         }
       ],
 
