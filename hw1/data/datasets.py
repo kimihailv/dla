@@ -89,7 +89,7 @@ class Collator:
             'wavs': wavs,
             'targets': torch.nn.utils.rnn.pad_sequence(targets, batch_first=True),
             'targets_len': targets_len,
-            'specs': torch.nn.utils.rnn.pad_sequence(specs, batch_first=True).transpose(1, 0),
+            'specs': torch.nn.utils.rnn.pad_sequence(specs, batch_first=True).transpose(2, 1),
             'specs_len': specs_len
         }
 
