@@ -30,7 +30,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 2,
+        "num_workers": 0,
         "shuffle": true,
         "pin_memory": false
       },
@@ -86,7 +86,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 2,
+        "num_workers": 0,
         "shuffle": true,
         "pin_memory": false
       },
@@ -113,7 +113,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 2,
+        "num_workers": 0,
         "shuffle": false,
         "pin_memory": false
       },

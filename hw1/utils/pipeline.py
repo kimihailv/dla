@@ -71,7 +71,7 @@ class Pipeline:
         return running_loss / len(self.train_loader)
 
     @torch.no_grad()
-    def eval(self, loader, mode):
+    def eval(self, epoch_num, loader, mode):
         self.model.eval()
         samples_to_log = 5
         running_loss = 0
@@ -97,7 +97,7 @@ class Pipeline:
                 tgt = batch['text'][sample_idx]
                 spec_len = batch['specs_len'][sample_idx]
                 spec = batch['specs'][sample_idx][:, :spec_len].cpu().numpy()
-                self.logger.add_row(batch['wavs'][sample_idx], spec, src, tgt, mode)
+                self.logger.add_row(epoch_num, batch['wavs'][sample_idx], spec, src, tgt, mode)
                 samples_to_log -= 1
 
         self.logger.push_table(mode)
@@ -116,8 +116,8 @@ class Pipeline:
                              'epoch': epoch_num})
 
             if epoch_num % self.training_params['eval_every'] == 0:
-                train_loss, train_cer, train_wer = self.eval(self.train_loader, 'train')
-                val_loss, val_cer, val_wer = self.eval(self.val_loader, 'val')
+                train_loss, train_cer, train_wer = self.eval(epoch_num, self.train_loader, 'train')
+                val_loss, val_cer, val_wer = self.eval(epoch_num, self.val_loader, 'val')
 
                 self.logger.log({'train_cer': train_cer,
                                  'train_wer': train_wer,
