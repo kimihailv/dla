@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 from functools import partial
 from librosa import load
-from time import time
 import soundfile as sf
 import numpy as np
 
@@ -59,7 +58,7 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return 128
+        return len(self.data)
 
 
 class Collator:
@@ -74,20 +73,13 @@ class Collator:
         wavs = []
         specs_len = []
         targets_len = []
-        wav_time = 0
-        mel_time = 0
 
         for item in samples:
-            wav_st = time()
             wav = item['wav']
             if self.wav_transform is not None:
                 wav = self.wav_transform(wav)
 
-            wav_time += time() - wav_st
-
-            mel_st = time()
             spec = self.mel_transform(wav)
-            mel_time += time() - mel_st
 
             wavs.append(wav)
             specs.append(spec.clamp(min=1e-5).log().transpose(1, 0))
@@ -95,7 +87,6 @@ class Collator:
             targets.append(torch.from_numpy(item['target_tokens_idx']))
             targets_len.append(len(item['target_tokens_idx']))
 
-        pad_st = time()
         batch = {
             'wavs': wavs,
             'targets': torch.nn.utils.rnn.pad_sequence(targets, batch_first=True),
@@ -104,12 +95,6 @@ class Collator:
             'specs_len': specs_len
         }
 
-        print('pad', time() - pad_st)
-
-        print('wav', wav_time)
-        print('mel', mel_time)
-
-        collate_time = time()
         for k in samples[0].keys():
             if k in ['wav', 'target_tokens_idx']:
                 continue
@@ -118,6 +103,5 @@ class Collator:
             for sample in samples:
                 batch[k].append(sample[k])
 
-        print('collate', time() - collate_time)
 
         return batch

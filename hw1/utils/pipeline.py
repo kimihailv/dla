@@ -115,7 +115,7 @@ class Pipeline:
                              'lr': self.scheduler.get_last_lr()[0],
                              'epoch': epoch_num})
 
-            if epoch_num % self.training_params['eval_every'] == 0:
+            if (epoch_num + 1) % self.training_params['eval_every'] == 0:
                 train_loss, train_cer, train_wer = self.eval(epoch_num, self.train_loader, 'train')
                 val_loss, val_cer, val_wer = self.eval(epoch_num, self.val_loader, 'val')
 

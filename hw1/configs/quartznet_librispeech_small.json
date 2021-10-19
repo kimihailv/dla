@@ -12,7 +12,7 @@
 
   "dataset_params": {
     "preprocess": {
-      "max_duration": 20,
+      "max_duration": 17,
       "max_target_len": 200,
       "sr": 16000,
       "remove_columns": [
@@ -30,7 +30,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 0,
+        "num_workers": 2,
         "shuffle": true,
         "pin_memory": false
       },
@@ -43,7 +43,7 @@
         },
         {
           "constructor": "TimeStretch",
-          "apply_prob": 0.5,
+          "apply_prob": 0.05,
           "args": {}
         }
       ],
@@ -62,15 +62,15 @@
               "args": {
                 "freq_mask_param": 10
               },
-              "apply_prob": 0.2
+              "apply_prob": 0.1
             },
 
             {
               "constructor": "TimeMasking",
               "args": {
-                "time_mask_param": 30
+                "time_mask_param": 10
               },
-              "apply_prob": 0.2
+              "apply_prob": 0.1
             }
           ]
       }
@@ -84,7 +84,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 0,
+        "num_workers": 2,
         "shuffle": true,
         "pin_memory": false
       },
@@ -111,7 +111,7 @@
       "sound_ext": "flac",
       "loader": {
         "batch_size": 64,
-        "num_workers": 0,
+        "num_workers": 2,
         "shuffle": false,
         "pin_memory": false
       },
