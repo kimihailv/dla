@@ -86,3 +86,14 @@ class QuartzNet(nn.Module):
         x = self.final(x)
 
         return x.transpose(2, 1)
+
+    def calc_loss(self, batch, device, loss, return_output=False):
+        logprobs = self(batch['specs'].to(device))
+        target = batch['targets'].to(device)
+        input_len = batch['specs_len']
+        target_len = batch['targets_len']
+        # N x L x V
+        if return_output:
+            return loss(logprobs.permute(1, 0, 2), target, input_len, target_len), logprobs
+
+        return loss(logprobs.permute(1, 0, 2), target, input_len, target_len)
