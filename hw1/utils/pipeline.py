@@ -21,10 +21,10 @@ class Pipeline:
         self.tokenizer = None
         self.training_params = training_params
         self.device = training_params['device']
-        self.train_loader, tokenizer = self.make_loader(dataset_params['train'], dataset_params['preprocess'])
+        self.train_loader, tokenizer = self.make_loader(dataset_params['train'], dataset_params['common'])
         self.tokenizer = tokenizer
-        self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['preprocess'])
-        self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['preprocess'])
+        self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['common'])
+        self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['common'])
 
         model_params['args']['voc_size'] = len(self.tokenizer)
         self.model = make_generic('model', model_params).to(self.device)
@@ -40,15 +40,18 @@ class Pipeline:
         self.criterion = make_generic('loss', training_params['criterion'])
         self.text_decoder = TextDecoder(tokenizer)
 
-    def make_loader(self, dataset_params, preprocess_params):
+        if self.training_params['resume_from_epoch'] > -1:
+            self.resume(self.training_params['resume_from_epoch'])
+
+    def make_loader(self, dataset_params, common_params):
         wav_transform = None
         if len(dataset_params['aug']) > 0:
             wav_transform = Compose(*[make_aug(aug_params) for aug_params in dataset_params['aug']])
         mel_transform = make_mel_transform(dataset_params["mel_transform"])
-        dataset, tokenizer = make_dataset(dataset_params, preprocess_params, self.tokenizer)
+        dataset, tokenizer = make_dataset(dataset_params, common_params, self.tokenizer)
 
         collator = Collator(wav_transform, mel_transform,
-                            input_len_div_factor=preprocess_params['input_len_div_factor'])
+                            input_len_div_factor=common_params['input_len_div_factor'])
         return torch.utils.data.DataLoader(dataset, collate_fn=collator, **dataset_params['loader']), tokenizer
 
     def train_one_epoch(self, epoch_num):
@@ -138,7 +141,7 @@ class Pipeline:
 
         self.save(self.training_params['total_epochs'])
 
-        test_loss, cer, wer = self.eval(self.test_loader, 'test')
+        test_loss, cer, wer = self.eval(self.training_params['total_epochs'], self.test_loader, 'test')
         self.logger.set_summary({
             'test_loss': test_loss,
             'test_cer': cer,
@@ -159,6 +162,14 @@ class Pipeline:
             'scheduler': self.scheduler.state_dict()
         }
         torch.save(state, ckp_dir)
+
+    def resume(self, epoch_n):
+        ckp_dir = self.training_params['save_dir']
+        ckp_dir = f'{ckp_dir}/ckp_{epoch_n}.pt'
+        state = torch.load(ckp_dir)
+        self.model.load_state_dict(state['model'])
+        self.optimizer.load_state_dict(state['optimizer'])
+        self.scheduler.load_state_dict(state['scheduler'])
 
     @classmethod
     def from_config_file(cls, path_to_config):

@@ -1,64 +1,59 @@
 import torch
-from torch.utils.data import Dataset
-from functools import partial
-from librosa import load
-import soundfile as sf
-import numpy as np
+from torch.utils.data import Subset
+from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 
 
-def get_preprocess_fn(tokenizer, sound_dir='', sound_ext='flac', sr=22050):
-    def preprocess_dataset(sample, tokenizer, sound_dir, sound_ext, sr):
+def filter_dataset(dataset, max_duration, max_target_len):
+    exclude_ids = set()
+    for item_idx, item in enumerate(dataset):
+        if len(item['wav']) / dataset.sample_rate > max_duration or\
+                len(item['text']) > max_target_len:
+            exclude_ids.add(item_idx)
 
-        if sound_dir != '':
-            filename = sample['file'].split('/')[-1]
-            sample['file'] = f'{sound_dir}/{filename}'
+    selected_ids = set(range(len(dataset))) - exclude_ids
 
-        if sound_ext == 'flac':
-            sample['wav'] = sf.read(sample['file'])[0]
-        else:
-            sample['wav'] = load(sample['file'], sr=sr)
-        sample['target_tokens_idx'] = tokenizer.tokenize(sample['text'])
-        sample['text'] = tokenizer.filter_text(sample['text'])
-
-        return sample
-
-    return partial(preprocess_dataset,
-                   tokenizer=tokenizer,
-                   sound_dir=sound_dir,
-                   sound_ext=sound_ext,
-                   sr=sr)
+    return Subset(dataset, sorted(list(selected_ids)))
 
 
-def get_filter_fn(max_duration, max_target_len, sr=22050):
-    def filter_by_len(sample, max_duration, max_target_len, sr):
-        if len(sample['wav']) / sr > max_duration:
-            return False
-
-        if len(sample['text']) > max_target_len:
-            return False
-
-        return True
-
-    return partial(filter_by_len,
-                   max_duration=max_duration,
-                   max_target_len=max_target_len,
-                   sr=sr)
-
-
-class BaseDataset(Dataset):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
+class LJDataset(LJSPEECH):
+    def __init__(self, tokenizer=None, **dataset_kwargs):
+        super().__init__(**dataset_kwargs)
+        self.tokenizer = tokenizer
+        self.sample_rate = 22050
 
     def __getitem__(self, idx):
-        item = self.data[idx]
-        item['wav'] = np.array(item['wav'])
-        item['target_tokens_idx'] = np.array(item['target_tokens_idx'])
+        item = super().__getitem__(idx)
 
-        return item
+        if self.tokenizer is not None:
+            data = {
+                'wav': item[0][0].numpy(),
+                'target_tokens_idx': self.tokenizer.encode(item[3]),
+                'text': self.tokenizer.filter_text(item[3])
+            }
+        else:
+            data = {
+                'wav': item[0][0].numpy(),
+                'text': item[3]
+            }
 
-    def __len__(self):
-        return len(self.data)
+        return data
+
+
+class LibrispeechDataset(LIBRISPEECH):
+    def __init__(self, tokenizer, **dataset_kwargs):
+        super().__init__(**dataset_kwargs)
+        self.tokenizer = tokenizer
+        self.sample_rate = 16000
+
+    def __getitem__(self, idx):
+        item = super().__getitem__(idx)
+        data = {
+            'wav': item[0][0].numpy(),
+            'target_tokens_idx': self.tokenizer(item[2]),
+            'text': self.tokenizer.filter_text(item[2])
+        }
+
+        return data
 
 
 class Collator:

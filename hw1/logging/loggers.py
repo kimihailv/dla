@@ -13,7 +13,7 @@ class WandbLogger:
     def add_row(self, epoch, wav, mel_spec, src, tgt, split):
         columns = ['epoch', 'wav', 'mel_spec', 'src', 'tgt']
         history = []
-        sr = self.run.config['dataset_params']['preprocess']['sr']
+        sr = self.run.config['dataset_params']['common']['sr']
         wav = wandb.Audio(wav, sample_rate=sr)
         spec = wandb.Image(mel_spec)
 

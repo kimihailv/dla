@@ -1,13 +1,13 @@
 from ..data.augmentations import *
-from ..data.tokenizer import Tokenizer
-from ..data.datasets import get_preprocess_fn, get_filter_fn, BaseDataset
+from ..data.tokenizer import Tokenizer, BPETokenizer
+from ..data.datasets import filter_dataset, LibrispeechDataset, LJDataset
 from ..models import *
 from ..logging import WandbLogger
 from torchaudio.transforms import FrequencyMasking, TimeMasking
-import datasets
+from torch.utils.data import Subset
 import torch
 
-datasets.set_caching_enabled(False)
+
 inventory = {
     'model': {
         'LSTM': LSTM,
@@ -30,6 +30,11 @@ inventory = {
         'CrossEntropyLoss': torch.nn.CrossEntropyLoss
     },
 
+    'dataset': {
+        'Librispeech': LibrispeechDataset,
+        'LJ': LJDataset
+    },
+
     'aug': {
         'AddNoise': AddNoise,
         'PitchShift': PitchShift,
@@ -39,6 +44,11 @@ inventory = {
         'RandomApply': RandomApply,
         'FrequencyMasking': FrequencyMasking,
         'TimeMasking': TimeMasking
+    },
+
+    'tokenizer': {
+        'Tokenizer': Tokenizer,
+        'BPETokenizer': BPETokenizer
     },
 
     'logger': {
@@ -70,36 +80,28 @@ def make_mel_transform(params):
     return MelTransform(transform=transform, **params["args"])
 
 
-def make_dataset(dataset_params, preprocess_params, tokenizer=None):
-    if dataset_params['type'] == 'hugging_face':
-        if dataset_params['load_from'] == 'disk':
-            dataset_path = dataset_params['root_dir'] + '/' + dataset_params['name']
-            dataset = datasets.load_from_disk(dataset_path)
-        else:
-            if 'part' in dataset_params:
-                dataset = datasets.load_dataset(dataset_params['name'], dataset_params['part'],
-                                                split=dataset_params['split'])
-            else:
-                dataset = datasets.load_dataset(dataset_params['name'])
+def make_dataset(dataset_params, common_params, tokenizer=None):
+    cls = inventory['dataset'][common_params['constructor']]
+    if isinstance(dataset_params['split'], str):
+        dataset = cls(tokenizer=tokenizer,
+                      root=common_params['root_dir'],
+                      url=dataset_params['split'],
+                      download=True)
     else:
-        dataset = None
+        dataset = cls(tokenizer=tokenizer,
+                      root=common_params['root_dir'],
+                      download=True)
 
     if tokenizer is None:
-        tokenizer = Tokenizer(dataset)
+        common_params['tokenizer']['args']['data'] = dataset
+        tokenizer = make_generic('tokenizer', common_params['tokenizer'])
 
-    if dataset_params['sound_dir'] != '':
-        dataset_params['sound_dir'] = dataset_params['root_dir'] + '/' + dataset_params['sound_dir']
+    dataset = filter_dataset(dataset, common_params['max_duration'],
+                             common_params['max_target_len'])
 
-    dataset = dataset.map(get_preprocess_fn(tokenizer,
-                                            dataset_params['sound_dir'],
-                                            dataset_params['sound_ext'],
-                                            preprocess_params['sr']),
-                          num_proc=2,
-                          remove_columns=preprocess_params['remove_columns'])
-    print('Preprocessing finished')
-    dataset = dataset.filter(get_filter_fn(preprocess_params['max_duration'],
-                                           preprocess_params['max_target_len'],
-                                           preprocess_params['sr']),
-                             num_proc=1)
-    print('Filtering finished')
-    return BaseDataset(dataset), tokenizer
+    if not isinstance(dataset_params['split'], str):
+        start_frac, end_frac = dataset_params['split']
+        total_len = len(dataset)
+        ids = list(range(int(start_frac * total_len), int(end_frac * total_len)))
+        dataset = Subset(dataset, ids)
+    return dataset, tokenizer

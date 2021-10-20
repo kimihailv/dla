@@ -11,23 +11,24 @@
   },
 
   "dataset_params": {
-    "preprocess": {
-      "max_duration": 17,
+    "common": {
+      "max_duration": 18,
       "max_target_len": 200,
-      "sr": 16000,
-      "remove_columns": [
-        "chapter_id", "file", "speaker_id"
-      ],
-      "input_len_div_factor": 2
+      "sr": 22050,
+      "input_len_div_factor": 2,
+      "constructor": "LJ",
+      "root_dir": "/content/drive/MyDrive/dla_hw1",
+      "tokenizer": {
+        "constructor": "Tokenizer",
+        "args": {
+          "data": null,
+          "filter_voc": true
+        }
+      }
     },
 
     "train":  {
-      "type": "hugging_face",
-      "load_from": "disk",
-      "name": "librispeech-train",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
-      "sound_ext": "flac",
+      "part": [0, 0.7],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -50,7 +51,7 @@
 
       "mel_transform": {
         "args": {
-          "sample_rate": 16000,
+          "sample_rate": 22050,
           "n_fft": 1024,
           "win_length": 1024,
           "hop_length": 256,
@@ -62,7 +63,7 @@
               "args": {
                 "freq_mask_param": 10
               },
-              "apply_prob": 0.1
+              "apply_prob": 0.2
             },
 
             {
@@ -70,18 +71,13 @@
               "args": {
                 "time_mask_param": 10
               },
-              "apply_prob": 0.1
+              "apply_prob": 0.2
             }
           ]
       }
     },
     "val": {
-      "type": "hugging_face",
-      "load_from": "disk",
-      "name": "librispeech-val",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
-      "sound_ext": "flac",
+      "part": [0.7, 0.85],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -94,7 +90,7 @@
       "mel_transform": {
         "constructor": "MelTransform",
         "args": {
-          "sample_rate": 16000,
+          "sample_rate": 22050,
           "n_fft": 1024,
           "win_length": 1024,
           "hop_length": 256,
@@ -103,12 +99,7 @@
       }
     },
     "test": {
-      "type": "hugging_face",
-      "load_from": "disk",
-      "name": "librispeech-test",
-      "root_dir": "dla/hw1/assets",
-      "sound_dir": "flac",
-      "sound_ext": "flac",
+      "part": [0.85, 1],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -121,7 +112,7 @@
       "mel_transform": {
         "constructor": "MelTransform",
         "args": {
-          "sample_rate": 16000,
+          "sample_rate": 22050,
           "n_fft": 1024,
           "win_length": 1024,
           "hop_length": 256,
