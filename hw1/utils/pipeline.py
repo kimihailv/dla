@@ -7,6 +7,7 @@ from json import load
 from tqdm import tqdm
 from os import environ
 from copy import deepcopy
+from pathlib import Path
 import numpy as np
 
 
@@ -153,8 +154,9 @@ class Pipeline:
         self.logger.finish()
 
     def save(self, epoch_n):
-        ckp_dir = self.training_params['save_dir']
-        ckp_dir = f'{ckp_dir}/ckp_{epoch_n + 1}.pt'
+        ckp_dir = Path(self.training_params['save_dir'])
+        ckp_dir.mkdir(exist_ok=True, parents=True)
+        ckp_dir = ckp_dir / f'ckp_{epoch_n + 1}.pt'
         state = {
             'epoch': epoch_n + 1,
             'model': self.model.state_dict(),

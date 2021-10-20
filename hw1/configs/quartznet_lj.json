@@ -19,10 +19,11 @@
       "constructor": "LJ",
       "root_dir": "/content/drive/MyDrive/dla_hw1",
       "tokenizer": {
-        "constructor": "Tokenizer",
+        "constructor": "BPETokenizer",
         "args": {
           "data": null,
-          "filter_voc": true
+          "filter_voc": true,
+          "vocab_size": 1000
         }
       }
     },
@@ -161,7 +162,7 @@
     "total_epochs": 200,
     "eval_every": 5,
     "save_every": 25,
-    "save_dir": "/content/drive/MyDrive/dla_hw1",
+    "save_dir": "/content/drive/MyDrive/dla_hw1/quartz_lj",
     "resume_from_epoch": -1
   }
 
