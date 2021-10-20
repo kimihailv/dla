@@ -96,6 +96,7 @@ def make_dataset(dataset_params, common_params, tokenizer=None):
         common_params['tokenizer']['args']['data'] = dataset
         tokenizer = make_generic('tokenizer', common_params['tokenizer'])
 
+    dataset.tokenizer = tokenizer
     dataset = filter_dataset(dataset, common_params['max_duration'],
                              common_params['max_target_len'])
 

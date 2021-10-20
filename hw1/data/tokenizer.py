@@ -6,9 +6,9 @@ import youtokentome as yttm
 class BaseTokenizer:
     def __init__(self, data, filter_voc=True):
         self.filter_voc = filter_voc
-        self.fit(data)
         self.voc = []
         self._eps_token = ''
+        self.fit(data)
 
     @abstractmethod
     def fit(self, data):
@@ -38,10 +38,10 @@ class BaseTokenizer:
 
 class Tokenizer(BaseTokenizer):
     def __init__(self, data, filter_voc=True):
-        self._eps_token = '^'
         self.idx2token = None
         self.token2idx = None
         super().__init__(data, filter_voc)
+        self._eps_token = '^'
 
     def fit(self, data):
         voc = set()
@@ -87,9 +87,9 @@ class Tokenizer(BaseTokenizer):
 class BPETokenizer(BaseTokenizer):
     def __init__(self, data, filter_voc=True, vocab_size=1000):
         self.tokenizer = None
+        super(BPETokenizer, self).__init__(data, filter_voc)
         self.vocab_size = vocab_size
         self._eps_token = '<PAD>'
-        super(BPETokenizer, self).__init__(data, filter_voc)
 
     def fit(self, data):
         with open('train_texts.txt', 'w+') as f:
