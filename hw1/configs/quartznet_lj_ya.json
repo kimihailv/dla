@@ -17,7 +17,7 @@
       "sr": 22050,
       "input_len_div_factor": 2,
       "constructor": "LJ",
-      "root_dir": "/content/drive/MyDrive/dla_hw1",
+      "root_dir": "/home/jupyter/mnt/datasets/LJSPEECH",
       "tokenizer": {
         "constructor": "BPETokenizer",
         "args": {
