@@ -168,7 +168,9 @@
     },
     "device": "cuda:0",
     "total_epochs": 200,
-    "eval_every": 5
+    "eval_every": 5,
+    "save_every": 25,
+    "save_dir": "/content/drive/MyDrive/dla_hw1"
   }
 
 }

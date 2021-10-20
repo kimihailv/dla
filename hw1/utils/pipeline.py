@@ -133,6 +133,11 @@ class Pipeline:
                 if val_wer < best_wer:
                     best_wer = val_wer
 
+            if (epoch_num + 1) % self.training_params['save_every'] == 0:
+                self.save(epoch_num)
+
+        self.save(self.training_params['total_epochs'])
+
         test_loss, cer, wer = self.eval(self.test_loader, 'test')
         self.logger.set_summary({
             'test_loss': test_loss,
@@ -143,6 +148,17 @@ class Pipeline:
         })
 
         self.logger.finish()
+
+    def save(self, epoch_n):
+        ckp_dir = self.training_params['save_dir']
+        ckp_dir = f'{ckp_dir}/ckp_{epoch_n + 1}.pt'
+        state = {
+            'epoch': epoch_n + 1,
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'scheduler': self.scheduler.state_dict()
+        }
+        torch.save(state, ckp_dir)
 
     @classmethod
     def from_config_file(cls, path_to_config):
