@@ -124,19 +124,23 @@
   },
 
   "optimizer_params": {
-    "constructor": "AdamW",
+    "constructor": "SGD",
     "args": {
       "params": null,
-      "lr": 3e-4,
-      "weight_decay": 1e-5
+      "momentum": 0.9,
+      "nesterov": true,
+      "lr": 0.1,
+      "weight_decay": 5e-5
     }
   },
 
   "scheduler_params": {
-    "constructor": "CosineAnnealingLR",
+    "constructor": "OneCycleLR",
     "args": {
       "optimizer": null,
-      "T_max": 2000,
+      "max_lr": 0.1,
+      "epochs": 200,
+      "steps_per_epoch": 144,
       "eta_min": 5e-6
     }
   },
@@ -160,8 +164,8 @@
     },
     "device": "cuda:0",
     "total_epochs": 200,
+    "scheduler_step_per_epoch": false,
     "eval_every": 5,
-    "scheduler_step_per_epoch": true,
     "save_every": 25,
     "save_dir": "dla/hw1/weights/quartz_lj",
     "resume_from_epoch": -1
