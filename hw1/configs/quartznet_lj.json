@@ -29,7 +29,7 @@
     },
 
     "train":  {
-      "part": [0, 0.7],
+      "split": [0, 0.7],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -78,7 +78,7 @@
       }
     },
     "val": {
-      "part": [0.7, 0.85],
+      "split": [0.7, 0.85],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
@@ -100,7 +100,7 @@
       }
     },
     "test": {
-      "part": [0.85, 1],
+      "split": [0.85, 1],
       "loader": {
         "batch_size": 64,
         "num_workers": 2,
