@@ -5,6 +5,7 @@ from ..models import *
 from ..logging import WandbLogger
 from torchaudio.transforms import FrequencyMasking, TimeMasking
 from torch.utils.data import Subset
+from ..eval.decoding import *
 import torch
 
 
@@ -49,6 +50,12 @@ inventory = {
     'tokenizer': {
         'Tokenizer': Tokenizer,
         'BPETokenizer': BPETokenizer
+    },
+
+    'text_decoder': {
+        'CTCGreedyDecoder': CTCGreedyDecoder,
+        'BeamSearchGreedyDecoder': BeamSearchDecoder,
+        'GreedyDecoder': GreedyDecoder
     },
 
     'logger': {

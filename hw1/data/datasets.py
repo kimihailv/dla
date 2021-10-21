@@ -91,7 +91,7 @@ class Collator:
         }
 
         for k in samples[0].keys():
-            if k in ['wav', 'target_tokens_idx']:
+            if k in ['wav', 'targets']:
                 continue
             batch[k] = []
 

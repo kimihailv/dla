@@ -21,6 +21,14 @@ class BaseTokenizer:
     def decode(self, tokenized):
         pass
 
+    @abstractmethod
+    def dump(self):
+        pass
+
+    @abstractmethod
+    def load(self, state):
+        pass
+
     @property
     def eps_token(self):
         return self._eps_token
@@ -55,10 +63,12 @@ class Tokenizer(BaseTokenizer):
         voc = sorted(list(voc))
 
         voc.append(self._eps_token)
-        self.voc = set(voc)
+        self.voc = set(voc)  # to remove
 
         self.token2idx = {token: idx for idx, token in enumerate(voc)}
         self.idx2token = {idx: token for token, idx in self.token2idx.items()}
+        # fix order
+        self.voc = [self.idx2token[idx] for idx in range(len(voc))]
 
     def encode(self, text):
         if self.filter_voc:
@@ -67,6 +77,16 @@ class Tokenizer(BaseTokenizer):
 
     def decode(self, tokenized):
         return ''.join(self.idx2token[t] for t in tokenized)
+
+    def dump(self):
+        return self
+
+    def load(self, state):
+        self.voc = state.voc
+        self.filter_voc = state.filter_voc
+        self._eps_token = state.eps_token
+        self.token2idx = state.token2idx
+        self.idx2token = state.idx2token
 
     @property
     def eps_token_id(self):
@@ -85,11 +105,13 @@ class Tokenizer(BaseTokenizer):
 
 
 class BPETokenizer(BaseTokenizer):
-    def __init__(self, data, filter_voc=True, vocab_size=1000):
+    def __init__(self, data, filter_voc=True, vocab_size=1000, use_bos=False, use_eos=False):
         super(BPETokenizer, self).__init__(filter_voc)
         self.tokenizer = None
         self.vocab_size = vocab_size
         self._eps_token = '<PAD>'
+        self.use_bos = use_bos
+        self.use_eos = use_eos
         self.fit(data)
 
     def fit(self, data):
@@ -106,14 +128,30 @@ class BPETokenizer(BaseTokenizer):
         self.voc = self.tokenizer.vocab()
 
     def encode(self, text):
-        return self.tokenizer.encode(text)
+        return self.tokenizer.encode(text, bos=self.use_bos, eos=self.use_eos)
 
     def decode(self, tokenized):
         return self.tokenizer.decode(tokenized)[0]
 
     @property
     def eps_token_id(self):
-        return 0
+        return self.tokenizer.subword_to_id(self._eps_token)
+
+    @property
+    def bos_token_id(self):
+        return self.tokenizer.subword_to_id('<BOS>')
 
     def __len__(self):
         return self.vocab_size
+
+    def dump(self):
+        return self
+
+    def load(self, state):
+        self.voc = state.voc
+        self.filter_voc = state.filter_voc
+        self._eps_token = state.eps_token
+        self.tokenizer = state.tokenizer
+        self.vocab_size = state.vocab_size
+        self.use_bos = state.use_bos
+        self.use_eos = state.use_eos

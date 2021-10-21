@@ -1,7 +1,6 @@
 import torch
 from .factory import make_generic, make_aug, make_dataset, make_mel_transform, Compose
 from ..data.datasets import Collator
-from ..eval.decoding import TextDecoder
 from ..eval.metrics import calc_cer, calc_wer
 from json import load
 from tqdm import tqdm
@@ -18,7 +17,8 @@ class Pipeline:
                  optimizer_params,
                  scheduler_params,
                  logger_params,
-                 training_params):
+                 training_params,
+                 text_decoder_params):
         self.tokenizer = None
         self.training_params = training_params
         self.device = training_params['device']
@@ -28,6 +28,11 @@ class Pipeline:
         self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['common'])
 
         model_params['args']['voc_size'] = len(self.tokenizer)
+
+        if model_params['constructor'] == 'LAS':
+            model_params['args']['bos_idx'] = self.tokenizer.bos_token_id
+            model_params['args']['padding_idx'] = self.tokenizer.eps_token_id
+
         self.model = make_generic('model', model_params).to(self.device)
         optimizer_params['args']['params'] = self.model.parameters()
         self.optimizer = make_generic('optimizer', optimizer_params)
@@ -38,8 +43,12 @@ class Pipeline:
 
         if self.training_params['criterion']['constructor'] == 'CTCLoss':
             self.training_params['criterion']['args']['blank'] = self.tokenizer.eps_token_id
+        elif self.training_params['criterion']['constructor'] == 'CrossEntropyLoss':
+            self.training_params['criterion']['args']['ignore_index'] = self.tokenizer.eps_token_id
+
         self.criterion = make_generic('loss', training_params['criterion'])
-        self.text_decoder = TextDecoder(tokenizer)
+        text_decoder_params['args']['tokenizer'] = tokenizer
+        self.text_decoder = make_generic('text_decoder', text_decoder_params)
 
         if self.training_params['resume_from_epoch'] > -1:
             self.resume(self.training_params['resume_from_epoch'])
@@ -63,7 +72,7 @@ class Pipeline:
 
         for idx, batch in enumerate(bar):
             self.optimizer.zero_grad()
-            loss = self.model.calc_loss(batch, self.device, self.criterion)
+            loss = self.model.calc_loss(batch, self.device, self.criterion, mode='train')
             loss.backward()
             self.optimizer.step()
 
@@ -86,10 +95,12 @@ class Pipeline:
         wer = 0
         num_samples = 0
         num_texts = 0
-
+        model_mode = 'train' if mode in ['train', 'val'] else 'test'  # need for LAS
         for batch in loader:
             num_samples += 1
-            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion, return_output=True)
+            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion,
+                                                  mode=model_mode,
+                                                  return_output=True)
             running_loss += loss.item()
 
             texts = self.text_decoder.decode(logprobs, batch['specs_len'])
@@ -165,7 +176,8 @@ class Pipeline:
             'epoch': epoch_n + 1,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'scheduler': self.scheduler.state_dict()
+            'scheduler': self.scheduler.state_dict(),
+            'tokenizer': self.tokenizer.dump()
         }
         torch.save(state, ckp_dir)
 
@@ -176,6 +188,7 @@ class Pipeline:
         self.model.load_state_dict(state['model'])
         self.optimizer.load_state_dict(state['optimizer'])
         self.scheduler.load_state_dict(state['scheduler'])
+        self.tokenizer.load(state['tokenizer'])
 
     @classmethod
     def from_config_file(cls, path_to_config):
