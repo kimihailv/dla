@@ -20,7 +20,7 @@
       "max_duration": 19,
       "max_target_len": 200,
       "sr": 22050,
-      "input_len_div_factor": 2,
+      "input_len_div_factor": 8,
       "constructor": "LJ",
       "root_dir": "/home/jupyter/mnt/datasets/LJSPEECH",
       "tokenizer": {

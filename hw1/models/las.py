@@ -141,7 +141,7 @@ class LAS(nn.Module):
     def forward(self, x, mode='train', sampling_from_prev_rate=0.1):
         batch_size = self.encoder(x['specs']).size(0)
         encoded = self.encoder(x['specs'])
-        last_idx = x['specs_len'] // 8 - 1
+        last_idx = x['specs_len']
         batch_range = torch.arange(batch_size).to(x['specs'].device)
         last_hidden = encoded[batch_range, last_idx]
 
