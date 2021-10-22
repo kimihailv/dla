@@ -44,6 +44,7 @@ class LJDataset(LJSPEECH):
 
 class LibrispeechDataset(LIBRISPEECH):
     def __init__(self, tokenizer, **dataset_kwargs):
+        dataset_kwargs['folder_in_archive'] = 'librispeech'
         super().__init__(**dataset_kwargs)
         self.tokenizer = tokenizer
         self.sample_rate = 16000

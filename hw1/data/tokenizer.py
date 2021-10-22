@@ -116,8 +116,13 @@ class BPETokenizer(BaseTokenizer):
         self._eps_token = '<PAD>'
         self.use_bos = use_bos
         self.use_eos = use_eos
+        self.ignore_ids = None
         self.model_dir = ''
         self.fit(data)
+
+        if self.use_eos and self.use_bos:
+            self.ignore_ids = [self.tokenizer.subword_to_id('<BOS>'),
+                               self.tokenizer.subword_to_id('<EOS>')]
 
     def fit(self, data):
         suffix = randint(0, 100000)
@@ -139,7 +144,7 @@ class BPETokenizer(BaseTokenizer):
         return self.tokenizer.encode(text, bos=self.use_bos, eos=self.use_eos)
 
     def decode(self, tokenized):
-        return self.tokenizer.decode(tokenized)[0]
+        return self.tokenizer.decode(tokenized, ignore_ids=self.ignore_ids)[0]
 
     @property
     def eps_token_id(self):
@@ -160,7 +165,8 @@ class BPETokenizer(BaseTokenizer):
                  'eps_token': self._eps_token,
                  'vocab_size': self.vocab_size,
                  'use_bos': self.use_bos,
-                 'use_eos': self.use_eos
+                 'use_eos': self.use_eos,
+                 'ignore_ids': self.ignore_ids
                  }
         return state
 
@@ -174,3 +180,4 @@ class BPETokenizer(BaseTokenizer):
         self.vocab_size = state['vocab_size']
         self.use_bos = state['use_bos']
         self.use_eos = state['use_eos']
+        self.ignore_ids = state['ignore_ids']

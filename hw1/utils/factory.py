@@ -7,6 +7,19 @@ from torchaudio.transforms import FrequencyMasking, TimeMasking
 from torch.utils.data import Subset
 from ..eval.decoding import *
 import torch
+import math
+
+
+def CosineWithWarmup(
+        optimizer, num_warmup_steps, num_training_steps, num_cycles=0.5, last_epoch=-1
+):
+    def lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
+
+    return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch)
 
 
 inventory = {
@@ -24,7 +37,8 @@ inventory = {
 
     'scheduler': {
         'CosineAnnealingLR': torch.optim.lr_scheduler.CosineAnnealingLR,
-        'OneCycleLR': torch.optim.lr_scheduler.OneCycleLR
+        'OneCycleLR': torch.optim.lr_scheduler.OneCycleLR,
+        'CosineWithWarmup': CosineWithWarmup
     },
 
     'loss': {
@@ -106,8 +120,8 @@ def make_dataset(dataset_params, common_params, tokenizer=None):
         tokenizer = make_generic('tokenizer', common_params['tokenizer'])
 
     dataset.tokenizer = tokenizer
-    dataset = filter_dataset(dataset, common_params['max_duration'],
-                             common_params['max_target_len'])
+    #dataset = filter_dataset(dataset, common_params['max_duration'],
+                             #common_params['max_target_len'])
 
     if not isinstance(dataset_params['split'], str):
         start_frac, end_frac = dataset_params['split']

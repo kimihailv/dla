@@ -82,6 +82,11 @@ class Spell(nn.Module):
                                       embedding_dim=emb_size,
                                       padding_idx=padding_idx)
 
+        self.attention = Attend(state_size=hidden_size,
+                                encoded_size=hidden_size * 2,
+                                hidden_size=hidden_size * 3,
+                                out_size=context_size)
+
         self.lstm = nn.LSTM(input_size=emb_size + hidden_size,
                             hidden_size=hidden_size,
                             num_layers=2,
@@ -94,16 +99,18 @@ class Spell(nn.Module):
             nn.Linear(hidden_size * 2, vocab_size)
         )
 
-    def forward(self, x, context, prev_state):
+    def forward(self, x, prev_context, prev_state, encoded):
         # x: N
         # context: N x context_size
         # prev_state: (2 x N x hidden_size, 2 x N x hidden_size)
+
         x = self.embedding(x.unsqueeze(1))  # N x 1 x emb_size
-        x = torch.cat((x, context.unsqueeze(1)), dim=2)
+        x = torch.cat((x, prev_context.unsqueeze(1)), dim=2)
 
         state, new_prev_state = self.lstm(x, prev_state)
-        logits = self.predictor(torch.cat((state.squeeze(), context), dim=1))
-        return logits, new_prev_state
+        new_context = self.attention(new_prev_state[0][1], encoded)
+        logits = self.predictor(torch.cat((state.squeeze(), new_context), dim=1))
+        return logits, new_prev_state, new_context
 
 
 class LAS(nn.Module):
@@ -124,10 +131,7 @@ class LAS(nn.Module):
                               input_size=input_size,
                               hidden_size=hidden_size,
                               dropout=dropout)
-        self.attention = Attend(state_size=hidden_size,
-                                encoded_size=hidden_size * 2,
-                                hidden_size=hidden_size * 3,
-                                out_size=context_size)
+
         self.decoder = Spell(emb_size=emb_size,
                              vocab_size=vocab_size,
                              padding_idx=padding_idx,
@@ -139,10 +143,10 @@ class LAS(nn.Module):
         self.dec_start_c = nn.Linear(hidden_size * 2, hidden_size * 2)
 
     def forward(self, x, mode='train', sampling_from_prev_rate=0.1):
-        x['specs'] = x['specs'].transpose(2, 1)
-        batch_size = x['specs'].size(0)
-        encoded = self.encoder(x['specs'])
-        batch_range = torch.arange(batch_size).to(x['specs'].device)
+        encoded = self.encoder(x['specs'].transpose(2, 1))
+        batch_size = encoded.size(0)
+
+        batch_range = torch.arange(batch_size).to(encoded.device)
         last_hidden = encoded[batch_range, x['specs_len'] - 1]
 
         prev_h = self.dec_start_h(last_hidden)
@@ -153,10 +157,10 @@ class LAS(nn.Module):
         prev_h = prev_h.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
         prev_c = prev_c.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
         prev_state = (prev_h, prev_c)
-        context, attention_probs = self.attention(prev_h[1], encoded)
+        prev_context, attention_probs = self.decoder.attention(prev_h[1], encoded)
 
         bos_logits = torch.full((batch_size,), self.bos_idx, dtype=torch.int64)
-        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.vocab_size) + 1e-9).to(x['specs'].device)
+        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.vocab_size) + 1e-9).to(encoded.device)
         seq_logits = [bos_logits.unsqueeze(1)]
 
         for step_idx in range(x['targets'].shape[1] - 1):
@@ -171,12 +175,10 @@ class LAS(nn.Module):
                                                       seq_logits[-1],
                                                       sampling_from_prev_rate)
 
-            logits, prev_state = self.decoder(next_token,
-                                              context,
-                                              prev_state)
-            # 2 x N x hidden_size
-            prev_h = prev_state[0][1]
-            context, attention_probs = self.attention(prev_h, encoded)
+            logits, prev_state, prev_context = self.decoder(next_token,
+                                                            prev_context,
+                                                            prev_state,
+                                                            encoded)
             seq_logits.append(logits.unsqueeze(1))
 
         return torch.cat(seq_logits, dim=1)
@@ -189,7 +191,11 @@ class LAS(nn.Module):
         to_sample = torch.bernoulli(torch.FloatTensor([sampling_from_prev_rate])).item()
 
         if to_sample == 1:
-            return torch.multinomial(F.softmax(prev_logits.squeeze(), dim=1), num_samples=1).squeeze()
+            probs = F.softmax(prev_logits.squeeze(), dim=1)
+            try:
+                return torch.multinomial(probs, num_samples=1).squeeze()
+            except:
+                print('hmm', probs)
 
         return x['targets'][:, step_idx]
 
