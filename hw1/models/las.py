@@ -75,10 +75,10 @@ class Attend(nn.Module):
 
 
 class Spell(nn.Module):
-    def __init__(self, emb_size, voc_size, padding_idx,
+    def __init__(self, emb_size, vocab_size, padding_idx,
                  context_size, hidden_size, dropout):
         super().__init__()
-        self.embedding = nn.Embedding(num_embeddings=voc_size,
+        self.embedding = nn.Embedding(num_embeddings=vocab_size,
                                       embedding_dim=emb_size,
                                       padding_idx=padding_idx)
 
@@ -91,7 +91,7 @@ class Spell(nn.Module):
         self.predictor = nn.Sequential(
             nn.Linear(context_size + hidden_size, hidden_size * 2),
             nn.ReLU(),
-            nn.Linear(hidden_size * 2, voc_size)
+            nn.Linear(hidden_size * 2, vocab_size)
         )
 
     def forward(self, x, context, prev_state):
@@ -108,7 +108,7 @@ class Spell(nn.Module):
 
 class LAS(nn.Module):
     def __init__(self,
-                 voc_size,
+                 vocab_size,
                  bos_idx,
                  padding_idx,
                  dropout=0,
@@ -119,7 +119,7 @@ class LAS(nn.Module):
                  context_size=256):
         super().__init__()
         self.bos_idx = bos_idx
-        self.voc_size = voc_size
+        self.vocab_size = vocab_size
         self.encoder = Listen(n_layers=encoder_n_layers,
                               input_size=input_size,
                               hidden_size=hidden_size,
@@ -129,7 +129,7 @@ class LAS(nn.Module):
                                 hidden_size=hidden_size * 3,
                                 out_size=context_size)
         self.decoder = Spell(emb_size=emb_size,
-                             voc_size=voc_size,
+                             vocab_size=vocab_size,
                              padding_idx=padding_idx,
                              context_size=context_size,
                              hidden_size=hidden_size,
@@ -157,7 +157,7 @@ class LAS(nn.Module):
         context, attention_probs = self.attention(prev_h[0], encoded)
 
         bos_logits = torch.full((batch_size,), self.bos_idx, dtype=torch.int64)
-        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.voc_size) + 1e-9).to(x['specs'].device)
+        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.vocab_size) + 1e-9).to(x['specs'].device)
         seq_logits = [bos_logits.unsqueeze(1)]
 
         for step_idx in range(x['targets'].shape[1] - 1):

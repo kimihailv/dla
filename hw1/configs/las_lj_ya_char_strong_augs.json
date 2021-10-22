@@ -28,7 +28,7 @@
         "args": {
           "data": null,
           "filter_voc": true,
-          "voc_size": 1000,
+          "vocab_size": 1000,
           "use_bos": true,
           "use_eos": true
         }
