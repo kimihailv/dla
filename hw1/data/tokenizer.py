@@ -1,7 +1,7 @@
 from tqdm.notebook import tqdm
 from abc import abstractmethod
+from random import randint
 import youtokentome as yttm
-
 
 class BaseTokenizer:
     def __init__(self, filter_voc=True):
@@ -105,8 +105,10 @@ class Tokenizer(BaseTokenizer):
 
 
 class BPETokenizer(BaseTokenizer):
-    def __init__(self, data, filter_voc=True, vocab_size=1000, use_bos=False, use_eos=False):
+    def __init__(self, data, save_dir, filter_voc=True, vocab_size=1000,
+                 use_bos=False, use_eos=False):
         super(BPETokenizer, self).__init__(filter_voc)
+        self.save_dir = save_dir
         self.tokenizer = None
         self.vocab_size = vocab_size
         self._eps_token = '<PAD>'
@@ -115,16 +117,17 @@ class BPETokenizer(BaseTokenizer):
         self.fit(data)
 
     def fit(self, data):
-        with open('train_texts.txt', 'w+') as f:
+        suffix = randint(0, 100000)
+        with open(f'{self.save_dir}/train_texts_{suffix}.txt', 'w+') as f:
             for item in tqdm(data):
                 if self.filter_voc:
                     print(self.filter_text(item['text']), file=f)
                 else:
                     print(item['text'], file=f)
 
-        yttm.BPE.train(data='train_texts.txt', vocab_size=self.vocab_size,
-                       model='bpe_model', pad_id=0)
-        self.tokenizer = yttm.BPE(model='bpe_model')
+        yttm.BPE.train(data=f'{self.save_dir}/train_texts_{suffix}.txt', vocab_size=self.vocab_size,
+                       model=f'{self.save_dir}/bpe_model_{suffix}', pad_id=0)
+        self.tokenizer = yttm.BPE(model=f'{self.save_dir}/bpe_model_{suffix}')
         self.voc = self.tokenizer.vocab()
 
     def encode(self, text):
@@ -145,13 +148,21 @@ class BPETokenizer(BaseTokenizer):
         return self.vocab_size
 
     def dump(self):
-        return self
+        state = {'save_dir': self.save_dir,
+                 'voc': self.voc,
+                 'filter_voc': self.filter_voc,
+                 'eps_token': self._eps_token,
+                 'vocab_size': self.vocab_size,
+                 'use_bos': self.use_bos,
+                 'use_eos': self.use_eos
+                 }
+        return state
 
     def load(self, state):
-        self.voc = state.voc
-        self.filter_voc = state.filter_voc
-        self._eps_token = state.eps_token
-        self.tokenizer = state.tokenizer
-        self.vocab_size = state.vocab_size
-        self.use_bos = state.use_bos
-        self.use_eos = state.use_eos
+        self.voc = state['voc']
+        self.filter_voc = state['filter_voc']
+        self._eps_token = state['eps_token']
+        self.tokenizer = yttm.BPE(model=state['save_dir'])
+        self.vocab_size = state['vocab_size']
+        self.use_bos = state['use_bos']
+        self.use_eos = state['use_eos']

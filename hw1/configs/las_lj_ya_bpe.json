@@ -30,7 +30,8 @@
           "filter_voc": true,
           "vocab_size": 1000,
           "use_bos": true,
-          "use_eos": true
+          "use_eos": true,
+          "save_dir": "dla/hw1/weights/las_lj_bpe"
         }
       }
     },
@@ -39,7 +40,7 @@
       "split": [0, 0.7],
       "loader": {
         "batch_size": 64,
-        "num_workers": 6,
+        "num_workers": 5,
         "shuffle": true,
         "pin_memory": true
       },
@@ -88,7 +89,7 @@
       "split": [0.7, 0.85],
       "loader": {
         "batch_size": 128,
-        "num_workers": 6,
+        "num_workers": 5,
         "shuffle": true,
         "pin_memory": true
       },
@@ -110,7 +111,7 @@
       "split": [0.85, 1],
       "loader": {
         "batch_size": 128,
-        "num_workers": 6,
+        "num_workers": 5,
         "shuffle": false,
         "pin_memory": true
       },
@@ -174,7 +175,7 @@
     "eval_every": 5,
     "scheduler_step_per_epoch": false,
     "save_every": 100,
-    "save_dir": "dla/hw1/weights/las_lj_char",
+    "save_dir": "dla/hw1/weights/las_lj_bpe",
     "resume_from_epoch": -1
   },
 
