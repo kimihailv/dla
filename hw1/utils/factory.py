@@ -100,6 +100,13 @@ def make_dataset(dataset_params, common_params, tokenizer=None):
                       root=common_params['root_dir'],
                       download=True)
 
+        start_frac, end_frac = dataset_params['split']
+        total_len = len(dataset)
+        ids = list(range(int(start_frac * total_len), int(end_frac * total_len)))
+        dataset = Subset(dataset, ids)
+
+        print(len(dataset))
+
     if tokenizer is None:
         common_params['tokenizer']['args']['data'] = dataset
         tokenizer = make_generic('tokenizer', common_params['tokenizer'])
@@ -108,9 +115,4 @@ def make_dataset(dataset_params, common_params, tokenizer=None):
     dataset = filter_dataset(dataset, common_params['max_duration'],
                              common_params['max_target_len'])
 
-    if not isinstance(dataset_params['split'], str):
-        start_frac, end_frac = dataset_params['split']
-        total_len = len(dataset)
-        ids = list(range(int(start_frac * total_len), int(end_frac * total_len)))
-        dataset = Subset(dataset, ids)
     return dataset, tokenizer
