@@ -142,9 +142,8 @@ class LAS(nn.Module):
         x['specs'] = x['specs'].transpose(2, 1)
         batch_size = x['specs'].size(0)
         encoded = self.encoder(x['specs'])
-        last_idx = x['specs_len']
         batch_range = torch.arange(batch_size).to(x['specs'].device)
-        last_hidden = encoded[batch_range, last_idx]
+        last_hidden = encoded[batch_range, x['specs_len']]
 
         prev_h = self.dec_start_h(last_hidden)
         prev_c = self.dec_start_c(last_hidden)
@@ -200,12 +199,12 @@ class LAS(nn.Module):
 
     def calc_loss(self, x, device, loss, mode, return_output=False):
         x['specs'] = x['specs'].to(device)
-        x['specs_len'] = torch.LongTensor(x['specs_len'], device=device)
+        x['specs_len'] = torch.LongTensor(x['specs_len']).to(device)
         x['targets'] = x['targets'].to(device)
         logits = self.forward(x, mode)
-        loss_v = loss(logits, x['targets'])
+        loss_v = loss(logits.transpose(2, 1).contiguous(), x['targets'])
 
         if return_output:
-            return loss_v, F.log_softmax(logits.transpose(2, 1).contiguous(), dim=-1)
+            return loss_v, F.log_softmax(logits, dim=-1)
 
         return loss_v

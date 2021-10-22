@@ -27,7 +27,7 @@ class Pipeline:
         self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['common'])
         self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['common'])
 
-        model_params['args']['voc_size'] = len(self.tokenizer)
+        model_params['args']['vocab_size'] = len(self.tokenizer)
 
         if model_params['constructor'] == 'LAS':
             model_params['args']['bos_idx'] = self.tokenizer.bos_token_id
