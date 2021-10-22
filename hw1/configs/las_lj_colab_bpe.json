@@ -39,7 +39,7 @@
     "train":  {
       "split": [0, 0.7],
       "loader": {
-        "batch_size": 64,
+        "batch_size": 40,
         "num_workers": 2,
         "shuffle": true,
         "pin_memory": true
@@ -135,21 +135,17 @@
     "constructor": "AdamW",
     "args": {
       "params": null,
-      "lr": 1e-2,
+      "lr": 1e-3,
       "weight_decay": 1e-5
     }
   },
 
   "scheduler_params": {
-    "constructor": "OneCycleLR",
+    "constructor": "CosineAnnealingLR",
     "args": {
       "optimizer": null,
-      "max_lr": 0.01,
-      "epochs": 300,
-      "steps_per_epoch": 144,
-      "cycle_momentum": false,
-      "div_factor": 33,
-      "final_div_factor": 1e5
+      "eta_min": 5e-7,
+      "T_max": 69000
     }
   },
 
