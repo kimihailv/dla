@@ -143,7 +143,7 @@ class LAS(nn.Module):
         batch_size = x['specs'].size(0)
         encoded = self.encoder(x['specs'])
         batch_range = torch.arange(batch_size).to(x['specs'].device)
-        last_hidden = encoded[batch_range, x['specs_len']]
+        last_hidden = encoded[batch_range, x['specs_len'] - 1]
 
         prev_h = self.dec_start_h(last_hidden)
         prev_c = self.dec_start_c(last_hidden)
@@ -153,7 +153,7 @@ class LAS(nn.Module):
         prev_h = prev_h.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
         prev_c = prev_c.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
         prev_state = (prev_h, prev_c)
-        context, attention_probs = self.attention(prev_h[0], encoded)
+        context, attention_probs = self.attention(prev_h[1], encoded)
 
         bos_logits = torch.full((batch_size,), self.bos_idx, dtype=torch.int64)
         bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.vocab_size) + 1e-9).to(x['specs'].device)
@@ -200,7 +200,7 @@ class LAS(nn.Module):
     def calc_loss(self, x, device, loss, mode, return_output=False):
         x['specs'] = x['specs'].to(device)
         x['specs_len'] = torch.LongTensor(x['specs_len']).to(device)
-        x['targets'] = x['targets'].to(device)
+        x['targets'] = x['targets'].long().to(device)
         logits = self.forward(x, mode)
         loss_v = loss(logits.transpose(2, 1).contiguous(), x['targets'])
 

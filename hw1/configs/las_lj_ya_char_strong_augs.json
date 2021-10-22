@@ -144,7 +144,7 @@
     "args": {
       "optimizer": null,
       "max_lr": 0.01,
-      "epochs": 400,
+      "epochs": 300,
       "steps_per_epoch": 144,
       "cycle_momentum": false,
       "div_factor": 33,
@@ -157,7 +157,7 @@
     "api_token": "250dbbcea2aeb58b6f317f9d7505802657d9a207",
     "args": {
       "project": "dla_hw1",
-      "name": "base",
+      "name": "LAS",
       "config": null
     }
   },
@@ -170,7 +170,7 @@
       }
     },
     "device": "cuda:0",
-    "total_epochs": 400,
+    "total_epochs": 300,
     "eval_every": 5,
     "scheduler_step_per_epoch": false,
     "save_every": 100,
