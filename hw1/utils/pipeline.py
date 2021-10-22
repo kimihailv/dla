@@ -103,7 +103,7 @@ class Pipeline:
                                                   return_output=True)
             running_loss += loss.item()
 
-            texts = self.text_decoder.decode(logprobs, batch['specs_len'])
+            texts = self.text_decoder.decode(self.model, logprobs, batch['specs_len'])
             for src, tgt in zip(texts, batch['text']):
                 num_texts += 1
                 cer += calc_cer(src, tgt)

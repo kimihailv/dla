@@ -3,7 +3,7 @@
   "model_params": {
     "constructor": "LAS",
     "args": {
-      "voc_size": 2000,
+      "vocab_size": 1000,
       "bos_idx": null,
       "padding_idx": null,
       "dropout": 0,
@@ -28,7 +28,7 @@
         "args": {
           "data": null,
           "filter_voc": true,
-          "voc_size": 2000,
+          "voc_size": 1000,
           "use_bos": true,
           "use_eos": true
         }
@@ -178,7 +178,7 @@
     "resume_from_epoch": -1
   },
 
-  "text_decoder": {
+  "text_decoder_params": {
     "constructor": "GreedyDecoder",
     "args": {
       "tokenizer": null

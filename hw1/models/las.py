@@ -139,7 +139,8 @@ class LAS(nn.Module):
         self.dec_start_c = nn.Linear(hidden_size * 2, hidden_size * 2)
 
     def forward(self, x, mode='train', sampling_from_prev_rate=0.1):
-        batch_size = self.encoder(x['specs']).size(0)
+        x['specs'] = x['specs'].transpose(2, 1)
+        batch_size = x['specs'].size(0)
         encoded = self.encoder(x['specs'])
         last_idx = x['specs_len']
         batch_range = torch.arange(batch_size).to(x['specs'].device)
@@ -150,13 +151,13 @@ class LAS(nn.Module):
         # prev_h: N x hidden_size * 2
         # prev_c: N x hidden_size * 2
 
-        prev_h = prev_h.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1)
-        prev_c = prev_c.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1)
+        prev_h = prev_h.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
+        prev_c = prev_c.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
         prev_state = (prev_h, prev_c)
         context, attention_probs = self.attention(prev_h[0], encoded)
 
         bos_logits = torch.full((batch_size,), self.bos_idx, dtype=torch.int64)
-        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.voc_size) + 1e-9)
+        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.voc_size) + 1e-9).to(x['specs'].device)
         seq_logits = [bos_logits.unsqueeze(1)]
 
         for step_idx in range(x['targets'].shape[1] - 1):
@@ -205,6 +206,6 @@ class LAS(nn.Module):
         loss_v = loss(logits, x['targets'])
 
         if return_output:
-            return loss_v, F.log_softmax(logits, dim=-1)
+            return loss_v, F.log_softmax(logits.transpose(2, 1).contiguous(), dim=-1)
 
         return loss_v

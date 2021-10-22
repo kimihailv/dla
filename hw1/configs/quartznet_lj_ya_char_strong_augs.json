@@ -166,7 +166,7 @@
     "resume_from_epoch": -1
   },
 
-  "text_decoder": {
+  "text_decoder_params": {
     "constructor": "CTCGreedyDecoder",
     "args": {
       "tokenizer": null

@@ -12,7 +12,8 @@ import torch
 inventory = {
     'model': {
         'LSTM': LSTM,
-        'QuartzNet': QuartzNet
+        'QuartzNet': QuartzNet,
+        'LAS': LAS
     },
 
     'optimizer': {
@@ -54,7 +55,7 @@ inventory = {
 
     'text_decoder': {
         'CTCGreedyDecoder': CTCGreedyDecoder,
-        'BeamSearchGreedyDecoder': BeamSearchDecoder,
+        'BeamSearchDecoder': BeamSearchDecoder,
         'GreedyDecoder': GreedyDecoder
     },
 

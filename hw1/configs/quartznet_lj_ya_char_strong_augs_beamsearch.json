@@ -167,7 +167,7 @@
     "resume_from_epoch": -1
   },
 
-  "text_decoder": {
+  "text_decoder_params": {
     "constructor": "BeamSearchDecoder",
     "args": {
       "tokenizer": null,
