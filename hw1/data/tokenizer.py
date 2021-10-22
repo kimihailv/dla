@@ -2,6 +2,7 @@ from tqdm.notebook import tqdm
 from abc import abstractmethod
 from random import randint
 from pathlib import Path
+from os.path import exists
 import youtokentome as yttm
 
 
@@ -125,6 +126,12 @@ class BPETokenizer(BaseTokenizer):
                                self.tokenizer.subword_to_id('<EOS>')]
 
     def fit(self, data):
+        if exists(f'{self.save_dir}/bpe_model'):
+            self.tokenizer = yttm.BPE(model=f'{self.save_dir}/bpe_model')
+            self.voc = self.tokenizer.vocab()
+            self.model_dir = f'{self.save_dir}/bpe_model'
+            return
+        
         suffix = randint(0, 100000)
         Path(self.save_dir).mkdir(parents=True, exist_ok=True)
         with open(f'{self.save_dir}/train_texts_{suffix}.txt', 'w+') as f:

@@ -78,6 +78,8 @@ class Pipeline:
 
             if not self.training_params['scheduler_step_per_epoch']:
                 self.scheduler.step()
+                self.logger.log({'lr': self.scheduler.get_last_lr()[0],
+                                 'epoch': epoch_num, 'batch': idx})
 
             loss_v = loss.item()
             self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
