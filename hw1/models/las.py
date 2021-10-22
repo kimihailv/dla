@@ -108,7 +108,7 @@ class Spell(nn.Module):
         x = torch.cat((x, prev_context.unsqueeze(1)), dim=2)
 
         state, new_prev_state = self.lstm(x, prev_state)
-        new_context = self.attention(new_prev_state[0][1], encoded)
+        new_context, attention_probs = self.attention(new_prev_state[0][1], encoded)
         logits = self.predictor(torch.cat((state.squeeze(), new_context), dim=1))
         return logits, new_prev_state, new_context
 

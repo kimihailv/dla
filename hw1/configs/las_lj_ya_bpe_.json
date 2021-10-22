@@ -3,7 +3,7 @@
   "model_params": {
     "constructor": "LAS",
     "args": {
-      "vocab_size": 10000,
+      "vocab_size": 1000,
       "bos_idx": null,
       "padding_idx": null,
       "dropout": 0,
@@ -21,23 +21,23 @@
       "max_target_len": 200,
       "sr": 22050,
       "input_len_div_factor": 8,
-      "constructor": "Librispeech",
-      "root_dir": "/home/jupyter/mnt/s3/bucket-hse-rw/data/datasets",
+      "constructor": "LJ",
+      "root_dir": "/home/jupyter/mnt/datasets/LJSPEECH",
       "tokenizer": {
         "constructor": "BPETokenizer",
         "args": {
           "data": null,
           "filter_voc": true,
-          "vocab_size": 10000,
+          "vocab_size": 1000,
           "use_bos": true,
           "use_eos": true,
-          "save_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe"
+          "save_dir": "dla/hw1/weights/las_lj_bpe"
         }
       }
     },
 
     "train":  {
-      "split": "train-clean-100",
+      "split": [0, 0.7],
       "loader": {
         "batch_size": 64,
         "num_workers": 5,
@@ -86,7 +86,7 @@
       }
     },
     "val": {
-      "split": "dev-clean",
+      "split": [0.7, 0.85],
       "loader": {
         "batch_size": 128,
         "num_workers": 5,
@@ -108,7 +108,7 @@
       }
     },
     "test": {
-      "split": "test-clean",
+      "split": [0.85, 1],
       "loader": {
         "batch_size": 128,
         "num_workers": 5,
@@ -144,8 +144,8 @@
     "constructor": "CosineWithWarmup",
     "args": {
       "optimizer": null,
-      "num_warmup_steps": 22300,
-      "num_training_steps": 89200
+      "num_warmup_steps": 10000,
+      "num_training_steps": 43200
     }
   },
 
@@ -167,11 +167,11 @@
       }
     },
     "device": "cuda:0",
-    "total_epochs": 200,
+    "total_epochs": 300,
     "eval_every": 5,
     "scheduler_step_per_epoch": false,
-    "save_every": 50,
-    "save_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe",
+    "save_every": 100,
+    "save_dir": "dla/hw1/weights/las_lj_bpe",
     "resume_from_epoch": -1
   },
 
