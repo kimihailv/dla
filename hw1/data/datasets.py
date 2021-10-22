@@ -105,9 +105,15 @@ class Collator:
 
 
 class HDF5Dataset(torch.utils.data.Dataset):
-    def __init__(self, data_path):
+    def __init__(self, tokenizer, data_path):
+        self.tokenizer = tokenizer
         self.data = h5py.File(data_path, 'r')
         self.keys = list(self.data.keys())
 
     def __getitem__(self, idx):
-        item = {'wav': self.data[]}
+        item = self.data[self.keys[idx]]
+        item = {'wav': item['wav'],
+                'target_tokens_idx': self.tokenizer(item['text']),
+                'text': self.tokenizer.filter_text(item['text'])
+                }
+        return item
