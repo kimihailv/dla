@@ -1,11 +1,12 @@
 import torch
 from torch.utils.data import Subset
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
+from tqdm import tqdm
 
 
 def filter_dataset(dataset, max_duration, max_target_len):
     exclude_ids = set()
-    for item_idx, item in enumerate(dataset):
+    for item_idx, item in tqdm(enumerate(dataset), total=len(dataset), leave=True, position=0):
         if len(item['wav']) / dataset.sample_rate > max_duration or\
                 len(item['text']) > max_target_len:
             exclude_ids.add(item_idx)
