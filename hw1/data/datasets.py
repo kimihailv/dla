@@ -50,11 +50,17 @@ class LibrispeechDataset(LIBRISPEECH):
 
     def __getitem__(self, idx):
         item = super().__getitem__(idx)
-        data = {
-            'wav': item[0][0].numpy(),
-            'target_tokens_idx': self.tokenizer(item[2]),
-            'text': self.tokenizer.filter_text(item[2])
-        }
+        if self.tokenizer is not None:
+            data = {
+                'wav': item[0][0].numpy(),
+                'target_tokens_idx': self.tokenizer(item[2]),
+                'text': self.tokenizer.filter_text(item[2])
+            }
+        else:
+            data = {
+                'wav': item[0][0].numpy(),
+                'text': item[2]
+            }
 
         return data
 
@@ -105,20 +111,27 @@ class Collator:
 
 
 class HDF5Dataset(torch.utils.data.Dataset):
-    def __init__(self, tokenizer, root_dir, url=None):
+    def __init__(self, tokenizer, root, url=None, download=True):
+        self.sample_rate = 22050 if 'lj.h5' in root else 16000
         self.tokenizer = tokenizer
         if url is None:
-            self.data = h5py.File(root_dir, 'r')
+            self.data = h5py.File(root, 'r')
         else:
-            self.data = h5py.File(root_dir, 'r')['url']
+            self.data = h5py.File(root, 'r')[url]
 
         self.keys = list(self.data.keys())
 
     def __getitem__(self, idx):
         item = self.data[self.keys[idx]]
         text = item['text'].asstr()[()]
-        item = {'wav': item['wav'],
-                'target_tokens_idx': self.tokenizer(text),
-                'text': self.tokenizer.filter_text(text)
-                }
-        return item
+
+        if self.tokenizer is not None:
+            data = {'wav': item['wav'],
+                    'target_tokens_idx': self.tokenizer(text),
+                    'text': self.tokenizer.filter_text(text)
+                    }
+        else:
+            data = {'wav': item['wav'],
+                    'text': text
+                    }
+        return data
