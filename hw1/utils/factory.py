@@ -1,6 +1,6 @@
 from ..data.augmentations import *
 from ..data.tokenizer import Tokenizer, BPETokenizer
-from ..data.datasets import filter_dataset, LibrispeechDataset, LJDataset
+from ..data.datasets import filter_dataset, LibrispeechDataset, LJDataset, HDF5Dataset
 from ..models import *
 from ..logging import WandbLogger
 from torchaudio.transforms import FrequencyMasking, TimeMasking
@@ -34,7 +34,8 @@ inventory = {
 
     'dataset': {
         'Librispeech': LibrispeechDataset,
-        'LJ': LJDataset
+        'LJ': LJDataset,
+        'HDF5Dataset': HDF5Dataset
     },
 
     'aug': {
