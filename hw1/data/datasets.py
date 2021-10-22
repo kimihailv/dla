@@ -53,7 +53,7 @@ class LibrispeechDataset(LIBRISPEECH):
         if self.tokenizer is not None:
             data = {
                 'wav': item[0][0].numpy(),
-                'target_tokens_idx': self.tokenizer(item[2]),
+                'target_tokens_idx': self.tokenizer.encode(item[2]),
                 'text': self.tokenizer.filter_text(item[2])
             }
         else:
@@ -126,12 +126,15 @@ class HDF5Dataset(torch.utils.data.Dataset):
         text = item['text'].asstr()[()]
 
         if self.tokenizer is not None:
-            data = {'wav': item['wav'],
-                    'target_tokens_idx': self.tokenizer(text),
+            data = {'wav': item['wav'][:],
+                    'target_tokens_idx': self.tokenizer.encode(text),
                     'text': self.tokenizer.filter_text(text)
                     }
         else:
-            data = {'wav': item['wav'],
+            data = {'wav': item['wav'][:],
                     'text': text
                     }
         return data
+
+    def __len__(self):
+        return len(self.keys)
