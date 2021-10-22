@@ -120,8 +120,8 @@ def make_dataset(dataset_params, common_params, tokenizer=None):
         tokenizer = make_generic('tokenizer', common_params['tokenizer'])
 
     dataset.tokenizer = tokenizer
-    #dataset = filter_dataset(dataset, common_params['max_duration'],
-                             #common_params['max_target_len'])
+    dataset = filter_dataset(dataset, common_params['max_duration'],
+                             common_params['max_target_len'])
 
     if not isinstance(dataset_params['split'], str):
         start_frac, end_frac = dataset_params['split']

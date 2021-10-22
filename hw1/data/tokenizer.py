@@ -131,7 +131,7 @@ class BPETokenizer(BaseTokenizer):
             self.voc = self.tokenizer.vocab()
             self.model_dir = f'{self.save_dir}/bpe_model'
             return
-        
+
         suffix = randint(0, 100000)
         Path(self.save_dir).mkdir(parents=True, exist_ok=True)
         with open(f'{self.save_dir}/train_texts_{suffix}.txt', 'w+') as f:
