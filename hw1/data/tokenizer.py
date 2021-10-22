@@ -3,6 +3,7 @@ from abc import abstractmethod
 from random import randint
 import youtokentome as yttm
 
+
 class BaseTokenizer:
     def __init__(self, filter_voc=True):
         self.filter_voc = filter_voc
@@ -126,7 +127,8 @@ class BPETokenizer(BaseTokenizer):
                     print(item['text'], file=f)
 
         yttm.BPE.train(data=f'{self.save_dir}/train_texts_{suffix}.txt', vocab_size=self.vocab_size,
-                       model=f'{self.save_dir}/bpe_model_{suffix}', pad_id=0)
+                       model=f'{self.save_dir}/bpe_model_{suffix}', pad_id=0, unk_id=1, bos_id=2, eos_id=3)
+
         self.tokenizer = yttm.BPE(model=f'{self.save_dir}/bpe_model_{suffix}')
         self.voc = self.tokenizer.vocab()
 

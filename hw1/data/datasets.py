@@ -1,5 +1,7 @@
+import h5py
 import torch
 from torch.utils.data import Subset
+from torch.utils.data.dataset import T_co
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 from tqdm import tqdm
 
@@ -100,3 +102,12 @@ class Collator:
                 batch[k].append(sample[k])
 
         return batch
+
+
+class HDF5Dataset(torch.utils.data.Dataset):
+    def __init__(self, data_path):
+        self.data = h5py.File(data_path, 'r')
+        self.keys = list(self.data.keys())
+
+    def __getitem__(self, idx):
+        item = {'wav': self.data[]}
