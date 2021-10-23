@@ -39,8 +39,8 @@
     "train":  {
       "split": "train-clean-100",
       "loader": {
-        "batch_size": 64,
-        "num_workers": 5,
+        "batch_size": 32,
+        "num_workers": 2,
         "shuffle": true,
         "pin_memory": true
       },
@@ -88,8 +88,8 @@
     "val": {
       "split": "dev-clean",
       "loader": {
-        "batch_size": 128,
-        "num_workers": 5,
+        "batch_size": 64,
+        "num_workers": 2,
         "shuffle": true,
         "pin_memory": true
       },
@@ -110,8 +110,8 @@
     "test": {
       "split": "test-clean",
       "loader": {
-        "batch_size": 128,
-        "num_workers": 5,
+        "batch_size": 64,
+        "num_workers": 2,
         "shuffle": false,
         "pin_memory": true
       },
@@ -144,8 +144,8 @@
     "constructor": "CosineWithWarmup",
     "args": {
       "optimizer": null,
-      "num_warmup_steps": 22300,
-      "num_training_steps": 89200
+      "num_warmup_steps": 42200,
+      "num_training_steps": 168800
     }
   },
 
