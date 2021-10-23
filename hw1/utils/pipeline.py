@@ -76,20 +76,32 @@ class Pipeline:
         num_samples = 0
 
         for idx, batch in enumerate(bar):
-            self.optimizer.zero_grad()
-            loss = self.model.calc_loss(batch, self.device, self.criterion, mode='train')
-            loss.backward()
-            self.optimizer.step()
+            try:
+                self.optimizer.zero_grad()
+                loss = self.model.calc_loss(batch, self.device, self.criterion, mode='train')
+                loss.backward()
+                self.optimizer.step()
 
-            if not self.training_params['scheduler_step_per_epoch']:
-                self.scheduler.step()
-                self.logger.log({'lr': self.scheduler.get_last_lr()[0],
-                                 'epoch': epoch_num, 'batch': idx})
+                if not self.training_params['scheduler_step_per_epoch']:
+                    self.scheduler.step()
+                    self.logger.log({'lr': self.scheduler.get_last_lr()[0],
+                                     'epoch': epoch_num, 'batch': idx})
 
-            loss_v = loss.item()
-            self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
-            num_samples += 1
-            running_loss += loss_v
+                loss_v = loss.item()
+                self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
+                num_samples += 1
+                running_loss += loss_v
+
+            except RuntimeError as e:
+                if "out of memory" in str(e):
+                    self.logger.warning("OOM on batch. Skipping batch.")
+                    for p in self.model.parameters():
+                        if p.grad is not None:
+                            del p.grad
+                    torch.cuda.empty_cache()
+                    continue
+                else:
+                    raise e
 
         return running_loss / len(self.train_loader)
 
