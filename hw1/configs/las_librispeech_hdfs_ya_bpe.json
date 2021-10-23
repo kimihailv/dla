@@ -40,7 +40,7 @@
       "split": "train-clean-100",
       "loader": {
         "batch_size": 64,
-        "num_workers": 5,
+        "num_workers": 7,
         "shuffle": true,
         "pin_memory": true
       },
@@ -89,7 +89,7 @@
       "split": "dev-clean",
       "loader": {
         "batch_size": 128,
-        "num_workers": 5,
+        "num_workers": 7,
         "shuffle": true,
         "pin_memory": true
       },
@@ -111,7 +111,7 @@
       "split": "test-clean",
       "loader": {
         "batch_size": 128,
-        "num_workers": 5,
+        "num_workers": 7,
         "shuffle": false,
         "pin_memory": true
       },
