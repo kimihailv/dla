@@ -94,7 +94,6 @@ class Pipeline:
 
             except RuntimeError as e:
                 if "out of memory" in str(e):
-                    self.logger.warning("OOM on batch. Skipping batch.")
                     for p in self.model.parameters():
                         if p.grad is not None:
                             del p.grad
