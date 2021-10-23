@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions.categorical import Categorical
 
 
 class Listen(nn.Module):
@@ -191,11 +192,10 @@ class LAS(nn.Module):
         to_sample = torch.bernoulli(torch.FloatTensor([sampling_from_prev_rate])).item()
 
         if to_sample == 1:
-            probs = F.softmax(prev_logits.squeeze(), dim=1)
             try:
-                return torch.multinomial(probs, num_samples=1).squeeze()
+                return Categorical(logits=prev_logits).sample()
             except:
-                print('hmm', probs)
+                print('hmm, problem in sampling')
 
         return x['targets'][:, step_idx]
 
