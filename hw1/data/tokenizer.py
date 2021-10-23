@@ -76,6 +76,7 @@ class Tokenizer(BaseTokenizer):
     def encode(self, text):
         if self.filter_voc:
             text = self.filter_text(text)
+
         return [self.token2idx[c] for c in text]
 
     def decode(self, tokenized):
@@ -98,6 +99,10 @@ class Tokenizer(BaseTokenizer):
     @property
     def eps_token(self):
         return self._eps_token
+
+    @property
+    def bos_token_id(self):
+        return self.token2idx['<BOS>']
 
     @staticmethod
     def filter_text(text):
