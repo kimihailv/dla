@@ -193,7 +193,7 @@ class LAS(nn.Module):
 
         if to_sample == 1:
             try:
-                return Categorical(logits=prev_logits).sample()
+                return Categorical(logits=prev_logits.squeeze()).sample()
             except:
                 print('hmm, problem in sampling')
 
