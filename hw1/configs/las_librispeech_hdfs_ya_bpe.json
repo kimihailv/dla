@@ -3,7 +3,7 @@
   "model_params": {
     "constructor": "LAS",
     "args": {
-      "vocab_size": 12000,
+      "vocab_size": 10000,
       "bos_idx": null,
       "padding_idx": null,
       "dropout": 0,
@@ -28,7 +28,7 @@
         "args": {
           "data": null,
           "filter_voc": true,
-          "vocab_size": 12000,
+          "vocab_size": 10000,
           "use_bos": true,
           "use_eos": true,
           "save_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe"
