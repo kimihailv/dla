@@ -19,7 +19,7 @@
     "common": {
       "max_duration": 19,
       "max_target_len": 260,
-      "sr": 22050,
+      "sr": 16000,
       "input_len_div_factor": 8,
       "constructor": "HDF5Dataset",
       "root_dir": "/home/jupyter/mnt/s3/bucket-hse-rw/data/datasets/librispeech/librispeech.h5",
@@ -60,7 +60,7 @@
 
       "mel_transform": {
         "args": {
-          "sample_rate": 22050,
+          "sample_rate": 16000,
           "n_fft": 220,
           "win_length": 220,
           "hop_length": 100,
@@ -99,7 +99,7 @@
       "mel_transform": {
         "constructor": "MelTransform",
         "args": {
-          "sample_rate": 22050,
+          "sample_rate": 16000,
           "n_fft": 220,
           "win_length": 220,
           "hop_length": 100,
@@ -121,7 +121,7 @@
       "mel_transform": {
         "constructor": "MelTransform",
         "args": {
-          "sample_rate": 22050,
+          "sample_rate": 16000,
           "n_fft": 220,
           "win_length": 220,
           "hop_length": 100,
