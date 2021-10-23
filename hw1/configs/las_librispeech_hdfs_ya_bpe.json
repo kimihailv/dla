@@ -21,8 +21,8 @@
       "max_target_len": 260,
       "sr": 22050,
       "input_len_div_factor": 8,
-      "constructor": "Librispeech",
-      "root_dir": "/home/jupyter/mnt/s3/bucket-hse-rw/data/datasets",
+      "constructor": "HDF5Dataset",
+      "root_dir": "/home/jupyter/mnt/s3/bucket-hse-rw/data/datasets/librispeech/librispeech.h5",
       "tokenizer": {
         "constructor": "BPETokenizer",
         "args": {
