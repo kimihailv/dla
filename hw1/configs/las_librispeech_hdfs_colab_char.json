@@ -39,7 +39,7 @@
     "train":  {
       "split": "train-clean-100",
       "loader": {
-        "batch_size": 40,
+        "batch_size": 32,
         "num_workers": 2,
         "shuffle": true,
         "pin_memory": true
