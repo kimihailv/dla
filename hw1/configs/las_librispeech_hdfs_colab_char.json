@@ -18,7 +18,7 @@
   "dataset_params": {
     "common": {
       "max_duration": 19,
-      "max_target_len": 260,
+      "max_target_len": 230,
       "sr": 22050,
       "input_len_div_factor": 8,
       "constructor": "HDF5Dataset",
@@ -135,17 +135,17 @@
     "constructor": "AdamW",
     "args": {
       "params": null,
-      "lr": 1e-3,
+      "lr": 3e-4,
       "weight_decay": 1e-5
     }
   },
 
   "scheduler_params": {
-    "constructor": "CosineWithWarmup",
+    "constructor": "CosineAnnealingLR",
     "args": {
       "optimizer": null,
-      "num_warmup_steps": 35500,
-      "num_training_steps": 140000
+      "T_max": 200,
+      "eta_min": 1e-6
     }
   },
 
@@ -169,7 +169,7 @@
     "device": "cuda:0",
     "total_epochs": 200,
     "eval_every": 5,
-    "scheduler_step_per_epoch": false,
+    "scheduler_step_per_epoch": true,
     "save_every": 50,
     "save_dir": "/content/drive/MyDrive/dla_hw1/weights/las_librispeech-100-clean_char",
     "resume_from_epoch": -1
