@@ -40,7 +40,7 @@ class Pipeline:
 
         if scheduler_params['constructor'] == 'CosineWithWarmup':
             scheduler_params['args']['num_training_steps'] = len(self.train_loader) * training_params['total_epochs']
-            scheduler_params['args']['num_warmup_steps'] = len(scheduler_params['args']['num_training_steps'] * 0.25)
+            scheduler_params['args']['num_warmup_steps'] = int(scheduler_params['args']['num_training_steps'] * 0.25)
         self.scheduler = make_generic('scheduler', scheduler_params)
 
         logger_params['models'] = self.model
