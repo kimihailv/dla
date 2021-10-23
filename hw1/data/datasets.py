@@ -1,7 +1,6 @@
 import h5py
 import torch
 from torch.utils.data import Subset
-from torch.utils.data.dataset import T_co
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 from tqdm import tqdm
 
