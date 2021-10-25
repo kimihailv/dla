@@ -207,6 +207,7 @@ class Pipeline:
         self.optimizer.load_state_dict(state['optimizer'])
         self.scheduler.load_state_dict(state['scheduler'])
         self.tokenizer.load(state['tokenizer'])
+        self.training_params['total_epochs'] -= state['epoch']
 
     @classmethod
     def from_config_file(cls, path_to_config):

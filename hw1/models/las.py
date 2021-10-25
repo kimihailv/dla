@@ -184,6 +184,35 @@ class LAS(nn.Module):
 
         return torch.cat(seq_logits, dim=1)
 
+    def start_decode(self, x):
+        encoded = self.encoder(x['specs'].transpose(2, 1))
+        batch_size = encoded.size(0)
+
+        batch_range = torch.arange(batch_size).to(encoded.device)
+        last_hidden = encoded[batch_range, x['specs_len'] - 1]
+
+        prev_h = self.dec_start_h(last_hidden)
+        prev_c = self.dec_start_c(last_hidden)
+        # prev_h: N x hidden_size * 2
+        # prev_c: N x hidden_size * 2
+
+        prev_h = prev_h.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
+        prev_c = prev_c.view(batch_size, last_hidden.size(1) // 2, 2).permute(2, 0, 1).contiguous()
+        prev_state = (prev_h, prev_c)
+        prev_context, attention_probs = self.decoder.attention(prev_h[1], encoded)
+
+        bos_logits = torch.full((batch_size,), self.bos_idx, dtype=torch.int64)
+        bos_logits = torch.log(F.one_hot(bos_logits, num_classes=self.vocab_size) + 1e-9).to(encoded.device)
+        return bos_logits, prev_context, prev_state, encoded, attention_probs
+
+    def decoder_step(self, next_token, prev_context, prev_state, encoded):
+        logits, prev_state, prev_context = self.decoder(next_token,
+                                                        prev_context,
+                                                        prev_state,
+                                                        encoded)
+
+        return logits, prev_state, prev_context
+
     @staticmethod
     def get_next_token_train(x, step_idx, prev_logits, sampling_from_prev_rate):
         if sampling_from_prev_rate == 0 or step_idx == 0:

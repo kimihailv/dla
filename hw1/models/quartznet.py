@@ -80,7 +80,7 @@ class QuartzNet(nn.Module):
             nn.LogSoftmax(1)
         )
 
-    def forward(self, x):
+    def forward(self, x, mode):
         x = self.conv1(x)
         # x: N x C x L
         x = self.blocks(x)
@@ -89,7 +89,7 @@ class QuartzNet(nn.Module):
         return x.transpose(2, 1)
 
     def calc_loss(self, batch, device, loss, mode, return_output=False):
-        logprobs = self(batch['specs'].to(device))
+        logprobs = self(batch['specs'].to(device), mode)
         target = batch['targets'].to(device)
         input_len = batch['specs_len']
         target_len = batch['targets_len']

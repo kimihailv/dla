@@ -1,11 +1,6 @@
-FROM continuumio/miniconda3
+FROM pytorch/pytorch
 
-RUN conda install pytorch torchaudio -c pytorch
-RUN conda install -c huggingface -c conda-forge datasets &&\
-    conda install -c conda-forge pysoundfile &&\
-    conda install -c conda-forge editdistance &&\
-    conda install  -c conda-forge &&\
-    conda install -c conda-forge librosa==0.8.1 &&\
-    conda install -c conda-forge notebook &&\
-    pip install wandb &&\
-    echo 'alias jn="jupyter notebook --ip=0.0.0.0 --port=8080 --allow-root --no-browser"' >> ~/.bashrc
+RUN pip install torchaudio editdistance librosa wandb youtokentome gdown
+RUN git clone --recursive https://github.com/parlance/ctcdecode.git && cd ctcdecode && pip install .
+RUN git https://github.com/kimihailv/dla.git
+RUN echo 'alias jn="jupyter notebook --ip=0.0.0.0 --port=8080 --allow-root --no-browser"' >> ~/.bashrc

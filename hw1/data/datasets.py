@@ -1,8 +1,10 @@
 import h5py
 import torch
+from librosa import load
 from torch.utils.data import Subset
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 from tqdm import tqdm
+from glob import glob
 
 
 def filter_dataset(dataset, max_duration, max_target_len):
@@ -138,3 +140,25 @@ class HDF5Dataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.keys)
+
+
+class TestDataset(torch.utils.data.Dataset):
+    def __init__(self, tokenizer, data_dir, sr):
+        super().__init__()
+        self.tokenizer = tokenizer
+        self.data_dir = data_dir
+        self.ids = [f.split('/')[-1][:-4] for f in glob(f'{data_dir}/audio/*.wav')]
+        self.sr = sr
+
+    def __getitem__(self, idx):
+        idx = self.ids[idx]
+        wav = load(f'{self.data_dir}/audio/{idx}.wav', sr=self.sr)
+        data = {
+            'wav': wav
+        }
+        with open(f'{self.data_dir}/transcriptions/{idx}.wav', 'r') as f:
+            text = f.read().strip()
+            data['target_tokens_idx'] = self.tokenizer.encode(text)
+            data['text'] = text
+
+        return data
