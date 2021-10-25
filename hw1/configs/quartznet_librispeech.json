@@ -1,0 +1,179 @@
+{
+
+  "model_params": {
+    "constructor": "QuartzNet",
+    "args": {
+      "in_channels": 64,
+      "n_blocks": 5,
+      "n_subblocks": 5,
+      "voc_size": -1
+    }
+  },
+
+  "dataset_params": {
+    "preprocess": {
+      "max_duration": 20,
+      "max_target_len": 200,
+      "sr": 16000,
+      "remove_columns": [
+        "chapter_id", "file", "speaker_id"
+      ],
+      "input_len_div_factor": 2
+    },
+
+    "train":  {
+      "type": "hugging_face",
+      "load_from": "hub",
+      "name": "librispeech_asr",
+      "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "train.100",
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true,
+        "pin_memory": false
+      },
+
+      "aug": [
+        {
+          "constructor": "AddNoise",
+          "apply_prob": 0.5,
+          "args": {}
+        },
+        {
+          "constructor": "PitchShift",
+          "apply_prob": 0.5,
+          "args": {
+            "sr": 16000
+          }
+        }
+      ],
+
+      "mel_transform": {
+        "args": {
+          "sample_rate": 16000,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
+          "n_mels": 64
+        },
+        "transform": [
+            {
+              "constructor": "FrequencyMasking",
+              "args": {
+                "freq_mask_param": 10
+              },
+              "apply_prob": 0.2
+            },
+
+            {
+              "constructor": "TimeMasking",
+              "args": {
+                "time_mask_param": 30
+              },
+              "apply_prob": 0.2
+            }
+          ]
+      }
+    },
+    "val": {
+      "type": "hugging_face",
+      "load_from": "hub",
+      "name": "librispeech_asr",
+      "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "valid",
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true,
+        "pin_memory": false
+      },
+
+      "aug": [],
+
+      "mel_transform": {
+        "constructor": "MelTransform",
+        "args": {
+          "sample_rate": 16000,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
+          "n_mels": 64
+        }
+      }
+    },
+    "test": {
+      "type": "hugging_face",
+      "load_from": "hub",
+      "name": "librispeech_asr",
+      "sound_ext": "flac",
+      "sound_dir": "",
+      "part": "clean",
+      "split": "test",
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": false,
+        "pin_memory": false
+      },
+
+      "aug": [],
+
+      "mel_transform": {
+        "constructor": "MelTransform",
+        "args": {
+          "sample_rate": 16000,
+          "n_fft": 400,
+          "win_length": 400,
+          "hop_length": 200,
+          "n_mels": 64
+        }
+      }
+    }
+  },
+
+  "optimizer_params": {
+    "constructor": "AdamW",
+    "args": {
+      "params": null,
+      "lr": 3e-4,
+      "weight_decay": 1e-5
+    }
+  },
+
+  "scheduler_params": {
+    "constructor": "CosineAnnealingLR",
+    "args": {
+      "optimizer": null,
+      "T_max": 2000,
+      "eta_min": 5e-6
+    }
+  },
+
+  "logger_params": {
+    "constructor": "WandbLogger",
+    "api_token": "250dbbcea2aeb58b6f317f9d7505802657d9a207",
+    "args": {
+      "project": "dla_hw1",
+      "name": "base",
+      "config": null
+    }
+  },
+
+  "training_params": {
+    "criterion": {
+      "constructor": "CTCLoss",
+      "args": {
+        "blank": null
+      }
+    },
+    "device": "cuda:0",
+    "total_epochs": 200,
+    "eval_every": 1,
+  }
+
+}

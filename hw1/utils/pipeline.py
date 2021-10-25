@@ -1,12 +1,12 @@
 import torch
-from .factory import make_generic, make_aug, make_dataset, Compose
+from .factory import make_generic, make_aug, make_dataset, make_mel_transform, Compose
 from ..data.datasets import Collator
-from ..eval.decoding import TextDecoder
 from ..eval.metrics import calc_cer, calc_wer
 from json import load
 from tqdm import tqdm
 from os import environ
 from copy import deepcopy
+from pathlib import Path
 import numpy as np
 
 
@@ -17,37 +17,56 @@ class Pipeline:
                  optimizer_params,
                  scheduler_params,
                  logger_params,
-                 training_params):
+                 training_params,
+                 text_decoder_params):
         self.tokenizer = None
         self.training_params = training_params
         self.device = training_params['device']
-        self.train_loader, tokenizer = self.make_loader(dataset_params['train'], dataset_params['preprocess'])
+        self.train_loader, tokenizer = self.make_loader(dataset_params['train'], dataset_params['common'])
         self.tokenizer = tokenizer
-        self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['preprocess'])
-        self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['preprocess'])
+        self.val_loader, _ = self.make_loader(dataset_params['val'], dataset_params['common'])
+        self.test_loader, _ = self.make_loader(dataset_params['test'], dataset_params['common'])
 
-        model_params['args']['voc_size'] = len(self.tokenizer)
+        model_params['args']['vocab_size'] = len(self.tokenizer)
+
+        if model_params['constructor'] == 'LAS':
+            model_params['args']['bos_idx'] = self.tokenizer.bos_token_id
+            model_params['args']['padding_idx'] = self.tokenizer.eps_token_id
+
         self.model = make_generic('model', model_params).to(self.device)
         optimizer_params['args']['params'] = self.model.parameters()
         self.optimizer = make_generic('optimizer', optimizer_params)
         scheduler_params['args']['optimizer'] = self.optimizer
+
+        if scheduler_params['constructor'] == 'CosineWithWarmup':
+            scheduler_params['args']['num_training_steps'] = len(self.train_loader) * training_params['total_epochs']
+            scheduler_params['args']['num_warmup_steps'] = int(scheduler_params['args']['num_training_steps'] * 0.25)
         self.scheduler = make_generic('scheduler', scheduler_params)
+
         logger_params['models'] = self.model
         self.logger = make_generic('logger', logger_params)
 
         if self.training_params['criterion']['constructor'] == 'CTCLoss':
             self.training_params['criterion']['args']['blank'] = self.tokenizer.eps_token_id
-        self.criterion = make_generic('loss', training_params['criterion'])
-        self.text_decoder = TextDecoder(tokenizer)
+        elif self.training_params['criterion']['constructor'] == 'CrossEntropyLoss':
+            self.training_params['criterion']['args']['ignore_index'] = self.tokenizer.eps_token_id
 
-    def make_loader(self, dataset_params, preprocess_params):
+        self.criterion = make_generic('loss', training_params['criterion'])
+        text_decoder_params['args']['tokenizer'] = tokenizer
+        self.text_decoder = make_generic('text_decoder', text_decoder_params)
+
+        if self.training_params['resume_from_epoch'] > -1:
+            self.resume(self.training_params['resume_from_epoch'])
+
+    def make_loader(self, dataset_params, common_params):
         wav_transform = None
         if len(dataset_params['aug']) > 0:
             wav_transform = Compose(*[make_aug(aug_params) for aug_params in dataset_params['aug']])
-        mel_transform = make_generic('aug', dataset_params['mel_transform'])
-        dataset, tokenizer = make_dataset(dataset_params, preprocess_params, self.tokenizer)
+        mel_transform = make_mel_transform(dataset_params["mel_transform"])
+        dataset, tokenizer = make_dataset(dataset_params, common_params, self.tokenizer)
 
-        collator = Collator(wav_transform, mel_transform)
+        collator = Collator(wav_transform, mel_transform,
+                            input_len_div_factor=common_params['input_len_div_factor'])
         return torch.utils.data.DataLoader(dataset, collate_fn=collator, **dataset_params['loader']), tokenizer
 
     def train_one_epoch(self, epoch_num):
@@ -57,20 +76,36 @@ class Pipeline:
         num_samples = 0
 
         for idx, batch in enumerate(bar):
-            self.optimizer.zero_grad()
-            loss = self.model.calc_loss(batch, self.device, self.criterion)
-            loss.backward()
-            self.optimizer.step()
+            try:
+                self.optimizer.zero_grad()
+                loss = self.model.calc_loss(batch, self.device, self.criterion, mode='train')
+                loss.backward()
+                self.optimizer.step()
 
-            loss_v = loss.item()
-            self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
-            num_samples += 1
-            running_loss += loss_v
+                if not self.training_params['scheduler_step_per_epoch']:
+                    self.scheduler.step()
+                    self.logger.log({'lr': self.scheduler.get_last_lr()[0],
+                                     'epoch': epoch_num, 'batch': idx})
+
+                loss_v = loss.item()
+                self.logger.log({'train_iter_loss': loss_v, 'epoch': epoch_num, 'batch': idx})
+                num_samples += 1
+                running_loss += loss_v
+
+            except RuntimeError as e:
+                if "out of memory" in str(e):
+                    for p in self.model.parameters():
+                        if p.grad is not None:
+                            del p.grad
+                    torch.cuda.empty_cache()
+                    continue
+                else:
+                    raise e
 
         return running_loss / len(self.train_loader)
 
     @torch.no_grad()
-    def eval(self, loader, mode):
+    def eval(self, epoch_num, loader, mode):
         self.model.eval()
         samples_to_log = 5
         running_loss = 0
@@ -78,13 +113,15 @@ class Pipeline:
         wer = 0
         num_samples = 0
         num_texts = 0
-
+        model_mode = 'train' if mode in ['train', 'val'] else 'test'  # need for LAS
         for batch in loader:
             num_samples += 1
-            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion, return_output=True)
+            loss, logprobs = self.model.calc_loss(batch, self.device, self.criterion,
+                                                  mode=model_mode,
+                                                  return_output=True)
             running_loss += loss.item()
 
-            texts = self.text_decoder.decode(logprobs, batch['specs_len'])
+            texts = self.text_decoder.decode(self.model, logprobs, batch['specs_len'])
             for src, tgt in zip(texts, batch['text']):
                 num_texts += 1
                 cer += calc_cer(src, tgt)
@@ -94,7 +131,9 @@ class Pipeline:
                 sample_idx = np.random.choice(len(texts))
                 src = texts[sample_idx]
                 tgt = batch['text'][sample_idx]
-                self.logger.add_row(batch['wavs'][sample_idx], src, tgt, mode)
+                spec_len = batch['specs_len'][sample_idx]
+                spec = batch['specs'][sample_idx][:, :spec_len].cpu().numpy()
+                self.logger.add_row(epoch_num, batch['wavs'][sample_idx], spec, src, tgt, mode)
                 samples_to_log -= 1
 
         self.logger.push_table(mode)
@@ -107,14 +146,15 @@ class Pipeline:
 
         for epoch_num in range(self.training_params['total_epochs']):
             train_loss = self.train_one_epoch(epoch_num)
-            self.scheduler.step()
+            if self.training_params['scheduler_step_per_epoch']:
+                self.scheduler.step()
             self.logger.log({'train_epoch_loss': train_loss,
                              'lr': self.scheduler.get_last_lr()[0],
                              'epoch': epoch_num})
 
-            if epoch_num % self.training_params['eval_every'] == 0:
-                train_loss, train_cer, train_wer = self.eval(self.train_loader, 'train')
-                val_loss, val_cer, val_wer = self.eval(self.val_loader, 'val')
+            if (epoch_num + 1) % self.training_params['eval_every'] == 0:
+                train_loss, train_cer, train_wer = self.eval(epoch_num, self.train_loader, 'train')
+                val_loss, val_cer, val_wer = self.eval(epoch_num, self.val_loader, 'val')
 
                 self.logger.log({'train_cer': train_cer,
                                  'train_wer': train_wer,
@@ -130,7 +170,12 @@ class Pipeline:
                 if val_wer < best_wer:
                     best_wer = val_wer
 
-        test_loss, cer, wer = self.eval(self.test_loader, 'test')
+            if (epoch_num + 1) % self.training_params['save_every'] == 0:
+                self.save(epoch_num)
+
+        self.save(self.training_params['total_epochs'])
+
+        test_loss, cer, wer = self.eval(self.training_params['total_epochs'], self.test_loader, 'test')
         self.logger.set_summary({
             'test_loss': test_loss,
             'test_cer': cer,
@@ -140,6 +185,28 @@ class Pipeline:
         })
 
         self.logger.finish()
+
+    def save(self, epoch_n):
+        ckp_dir = Path(self.training_params['save_dir'])
+        ckp_dir.mkdir(exist_ok=True, parents=True)
+        ckp_dir = ckp_dir / f'ckp_{epoch_n + 1}.pt'
+        state = {
+            'epoch': epoch_n + 1,
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'scheduler': self.scheduler.state_dict(),
+            'tokenizer': self.tokenizer.dump()
+        }
+        torch.save(state, ckp_dir)
+
+    def resume(self, epoch_n):
+        ckp_dir = self.training_params['save_dir']
+        ckp_dir = f'{ckp_dir}/ckp_{epoch_n}.pt'
+        state = torch.load(ckp_dir)
+        self.model.load_state_dict(state['model'])
+        self.optimizer.load_state_dict(state['optimizer'])
+        self.scheduler.load_state_dict(state['scheduler'])
+        self.tokenizer.load(state['tokenizer'])
 
     @classmethod
     def from_config_file(cls, path_to_config):

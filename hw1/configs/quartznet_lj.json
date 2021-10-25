@@ -1,0 +1,169 @@
+{
+
+  "model_params": {
+    "constructor": "QuartzNet",
+    "args": {
+      "in_channels": 64,
+      "n_blocks": 5,
+      "n_subblocks": 5,
+      "voc_size": -1
+    }
+  },
+
+  "dataset_params": {
+    "common": {
+      "max_duration": 18,
+      "max_target_len": 200,
+      "sr": 22050,
+      "input_len_div_factor": 2,
+      "constructor": "LJ",
+      "root_dir": "/content/drive/MyDrive/dla_hw1",
+      "tokenizer": {
+        "constructor": "BPETokenizer",
+        "args": {
+          "data": null,
+          "filter_voc": true,
+          "vocab_size": 1000
+        }
+      }
+    },
+
+    "train":  {
+      "split": [0, 0.7],
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true,
+        "pin_memory": false
+      },
+
+      "aug": [
+        {
+          "constructor": "AddNoise",
+          "apply_prob": 0.5,
+          "args": {}
+        },
+        {
+          "constructor": "TimeStretch",
+          "apply_prob": 0.05,
+          "args": {}
+        }
+      ],
+
+      "mel_transform": {
+        "args": {
+          "sample_rate": 22050,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
+          "n_mels": 64
+        },
+        "transform": [
+            {
+              "constructor": "FrequencyMasking",
+              "args": {
+                "freq_mask_param": 10
+              },
+              "apply_prob": 0.2
+            },
+
+            {
+              "constructor": "TimeMasking",
+              "args": {
+                "time_mask_param": 10
+              },
+              "apply_prob": 0.2
+            }
+          ]
+      }
+    },
+    "val": {
+      "split": [0.7, 0.85],
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true,
+        "pin_memory": false
+      },
+
+      "aug": [],
+
+      "mel_transform": {
+        "constructor": "MelTransform",
+        "args": {
+          "sample_rate": 22050,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
+          "n_mels": 64
+        }
+      }
+    },
+    "test": {
+      "split": [0.85, 1],
+      "loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": false,
+        "pin_memory": false
+      },
+
+      "aug": [],
+
+      "mel_transform": {
+        "constructor": "MelTransform",
+        "args": {
+          "sample_rate": 22050,
+          "n_fft": 1024,
+          "win_length": 1024,
+          "hop_length": 256,
+          "n_mels": 64
+        }
+      }
+    }
+  },
+
+  "optimizer_params": {
+    "constructor": "AdamW",
+    "args": {
+      "params": null,
+      "lr": 3e-4,
+      "weight_decay": 1e-5
+    }
+  },
+
+  "scheduler_params": {
+    "constructor": "CosineAnnealingLR",
+    "args": {
+      "optimizer": null,
+      "T_max": 2000,
+      "eta_min": 5e-6
+    }
+  },
+
+  "logger_params": {
+    "constructor": "WandbLogger",
+    "api_token": "250dbbcea2aeb58b6f317f9d7505802657d9a207",
+    "args": {
+      "project": "dla_hw1",
+      "name": "base",
+      "config": null
+    }
+  },
+
+  "training_params": {
+    "criterion": {
+      "constructor": "CTCLoss",
+      "args": {
+        "blank": null
+      }
+    },
+    "device": "cuda:0",
+    "total_epochs": 200,
+    "eval_every": 5,
+    "save_every": 25,
+    "save_dir": "/content/drive/MyDrive/dla_hw1/quartz_lj",
+    "resume_from_epoch": -1
+  }
+
+}
