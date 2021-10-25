@@ -89,38 +89,40 @@ class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
 
     def decode(self, model, batch, spec_lengths):
         bos_logits, prev_context, prev_state, encoded, attention_probs = model.start_decode(batch)
-        bos_token_id = bos_logits.argmax(dim=1)
+        beams = bos_logits.argmax(dim=1).unsqueeze(1).unsqueeze(2).expand(-1, self.beam_size, -1)
 
-        batch_beams = [[([token], 0)] for token in bos_token_id]
+        logits, prev_state, prev_context = model.decoder_step(bos_logits.argmax(dim=1),
+                                                              prev_context,
+                                                              prev_state,
+                                                              encoded)
+        logprobs = torch.nn.functional.log_softmax(logits, dim=1)
+        # beams, scores: bs x beam_size
+        scores, new_tokens = torch.topk(logprobs, self.beam_size, dim=-1)
+        # beams: bs x beam_size x 2
+        beams = torch.cat([beams, new_tokens], dim=-1)
+        states = [(prev_state, prev_context) for _ in range(self.beam_size)]
+        vocab_size = len(self.tokenizer)
 
-        for i, beams in enumerate(batch_beams):
-            batch_beams[i] = self.beam_search(model, prev_context, prev_state, encoded, beams)
-
-        return
-
-    def beam_search(self, model, prev_context, prev_state, encoded, beams):
-        tokens_ids = torch.arange(len(self.tokenizer)).to(model.device)
         for i in range(self.max_len):
-            candidates = []
-            for seq, score in beams:
-                if seq[-1].item() != self.tokenizer.eos_token_id:
-                    logits, prev_state, prev_context = model.decoder_step(seq[-1].unsqueeze(0),
-                                                                          prev_context,
-                                                                          prev_state,
-                                                                          encoded)
+            candidate_scores = torch.zeros(encoded.size(0), self.beam_size, vocab_size)
 
-                    logprobs = torch.nn.functional.log_softmax(logits, dim=-1).tolist()
+            for beam_idx, (prev_state, prev_context) in enumerate(states):
+                logits, prev_state, prev_context = model.decoder_step(beams[:, beam_idx, -1],
+                                                                      prev_context,
+                                                                      prev_state,
+                                                                      encoded)
+                states[i] = (prev_state, prev_context)
+                candidate_scores[:, beam_idx] = torch.nn.functional.log_softmax(logits, dim=-1)  # bs x vocab_size
+                candidate_scores[:, beam_idx] += scores[:, beam_idx].unsqueeze(1)
 
-                    for token_id, logprob in zip(tokens_ids, logprobs):
-                        candidates.append((seq + [token_id], score + logprob))
-                else:
-                    candidates.append((seq, score))
+            candidate_scores = candidate_scores.reshape(encoded.size(0), -1) # bs x beam_size*vocab_size
+            # bs x beam_size
+            candidate_scores, flat_index = torch.topk(candidate_scores, self.beam_size, dim=1)
+            beam_idx = flat_index // vocab_size
+            new_token_idx = flat_index % vocab_size
 
-            beams = sorted(candidates, key=lambda c: -c[1])[:self.beam_size]
+            beams = torch.gather(beams, 1, beam_idx.unsqueeze(2))
+            beams = torch.cat([beams, new_token_idx.unsqueeze(2)], dim=2)
+            scores = candidate_scores
 
-        results = []
-
-        for seq, score in beams:
-            results.append(torch.hstack(seq))
-
-        return torch.nn.utils.rnn.pad_sequence(results, padding_value=self.tokenizer.eps_token_id)
+        return beams[torch.arange(beams.size(0)), scores.argmax(dim=1)]
