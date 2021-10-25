@@ -125,4 +125,13 @@ class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
             beams = torch.cat([beams, new_token_idx.unsqueeze(2)], dim=2)
             scores = candidate_scores
 
-        return beams[torch.arange(beams.size(0)), scores.argmax(dim=1)]
+        top_beams = beams[torch.arange(beams.size(0)), scores.argmax(dim=1)]
+        beam_lens = (top_beams != self.tokenizer.eps_token_id).long().sum(dim=1).clamp(max=self.max_len - 1).tolist()
+        top_beams = top_beams.tolist()
+
+        texts = []
+        for token_ids, out_len in zip(top_beams, beam_lens):
+            text = self.tokenizer.decode(token_ids[:out_len])
+            texts.append(text)
+
+        return texts
