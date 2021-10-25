@@ -55,6 +55,8 @@ class Tokenizer(BaseTokenizer):
         self.fit(data)
 
     def fit(self, data):
+        if data is None:
+            return
         voc = set()
 
         for item in tqdm(data):
@@ -131,6 +133,9 @@ class BPETokenizer(BaseTokenizer):
                                self.tokenizer.subword_to_id('<EOS>')]
 
     def fit(self, data):
+        if data is None:
+            return
+
         if exists(f'{self.save_dir}/bpe_model'):
             self.tokenizer = yttm.BPE(model=f'{self.save_dir}/bpe_model')
             self.voc = self.tokenizer.vocab()
@@ -166,6 +171,10 @@ class BPETokenizer(BaseTokenizer):
     def bos_token_id(self):
         return self.tokenizer.subword_to_id('<BOS>')
 
+    @property
+    def eos_token_id(self):
+        return self.tokenizer.subword_to_id('<EOS>')
+
     def __len__(self):
         return self.vocab_size
 
@@ -184,7 +193,7 @@ class BPETokenizer(BaseTokenizer):
 
     def load(self, state):
         self.save_dir = state['save_dir']
-        self.save_dir = state['model_dir']
+        self.model_dir = state['model_dir']
         self.tokenizer = yttm.BPE(model=state['model_dir'])
         self.voc = state['voc']
         self.filter_voc = state['filter_voc']

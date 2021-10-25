@@ -79,3 +79,48 @@ class BeamSearchDecoder(CTCGreedyDecoder):
             texts.append(text)
 
         return texts
+
+
+class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
+    def __init__(self, tokenizer, max_len=12, beam_size=4):
+        super().__init__(tokenizer)
+        self.max_len = max_len
+        self.beam_size = beam_size
+
+    def decode(self, model, batch, spec_lengths):
+        bos_logits, prev_context, prev_state, encoded, attention_probs = model.start_decode(batch)
+        bos_token_id = bos_logits.argmax(dim=1)
+
+        batch_beams = [[([token], 0)] for token in bos_token_id]
+
+        for i, beams in enumerate(batch_beams):
+            batch_beams[i] = self.beam_search(model, prev_context, prev_state, encoded, beams)
+
+        return
+
+    def beam_search(self, model, prev_context, prev_state, encoded, beams):
+        tokens_ids = torch.arange(len(self.tokenizer)).to(model.device)
+        for i in range(self.max_len):
+            candidates = []
+            for seq, score in beams:
+                if seq[-1].item() != self.tokenizer.eos_token_id:
+                    logits, prev_state, prev_context = model.decoder_step(seq[-1].unsqueeze(0),
+                                                                          prev_context,
+                                                                          prev_state,
+                                                                          encoded)
+
+                    logprobs = torch.nn.functional.log_softmax(logits, dim=-1).tolist()
+
+                    for token_id, logprob in zip(tokens_ids, logprobs):
+                        candidates.append((seq + [token_id], score + logprob))
+                else:
+                    candidates.append((seq, score))
+
+            beams = sorted(candidates, key=lambda c: -c[1])[:self.beam_size]
+
+        results = []
+
+        for seq, score in beams:
+            results.append(torch.hstack(seq))
+
+        return torch.nn.utils.rnn.pad_sequence(results, padding_value=self.tokenizer.eps_token_id)
