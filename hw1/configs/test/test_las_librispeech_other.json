@@ -1,0 +1,81 @@
+{
+  "device": "cuda:0",
+  "weights_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe",
+  "checkpoint_params": {
+    "checkpoint_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/ckp_200.pt",
+    "checkpoint_link": "https://drive.google.com/uc?id=17Hh7c0Ea0l6W2qQUNtb2r1KXWhQMURdL",
+    "bpe_link": "https://drive.google.com/uc?id=1p_V7kyZ6lT_BsuP66EQRZgRFX4rwG5Qr",
+    "bpe_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/bpe_model_38536"
+  },
+
+  "tokenizer_params": {
+    "constructor": "BPETokenizer",
+    "args": {
+          "data": null,
+          "filter_voc": true,
+          "vocab_size": 12000,
+          "use_bos": true,
+          "use_eos": true,
+          "save_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe"
+    }
+  },
+
+  "dataset_params": {
+    "constructor": "HDF5Dataset",
+    "args": {
+      "tokenizer": null,
+      "root": "dla/librispeech_part.h5",
+      "url": "test-other"
+    },
+    "input_len_div_factor": 8,
+    "batch_size": 64,
+    "mel_transform": {
+        "constructor": "MelTransform",
+        "args": {
+          "sample_rate": 16000,
+          "n_fft": 220,
+          "win_length": 220,
+          "hop_length": 100,
+          "n_mels": 40
+        }
+      }
+  },
+
+  "model": {
+    "constructor": "LAS",
+    "args": {
+      "vocab_size": 12000,
+      "bos_idx": null,
+      "padding_idx": null,
+      "dropout": 0,
+      "encoder_n_layers": 3,
+      "hidden_size": 256,
+      "input_size": 40,
+      "emb_size": 256,
+      "context_size": 256
+    }
+  },
+
+  "text_decoders": {
+    "greedy": {
+      "constructor": "GreedyDecoder",
+      "args": {
+      "tokenizer": null
+      }
+    },
+
+    "beam_search": {
+      "constructor": "Seq2SeqBeamSearchDecoder",
+      "lm_link": "https://drive.google.com/uc?id=1rgbs9bkvVdU3Oo_jxhupUmuMYB9lnOJj",
+      "args": {
+        "tokenizer": null,
+        "max_len": 30,
+        "device": "cuda:0",
+        "beam_size": 35,
+        "lm_weight_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/lm.pt",
+        "alpha": 0.4
+      }
+    }
+  }
+
+}

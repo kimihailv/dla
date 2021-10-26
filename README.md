@@ -17,3 +17,4 @@ __Как обучать__:
 
 Внутри контейнера: `python -m dla.hw1.utils.pipeline -c dla/hw1/configs/las_librispeech_hdfs_ya_bpe.json`
 
+[Ссылка на отчёт](https://bronze-colony-d62.notion.site/DLA-1-f5c6e607f9c84bb09246f6f306f7d764)
