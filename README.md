@@ -1,8 +1,11 @@
 # Homeworks of DLA Course
 ## HW1
 
-Overfitting on the one batch (size=20) of librispeech:
+Как тестировать:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://drive.google.com/file/d/1I8ipjm5lNntdS1BoCjXv4Jqi-WIg4Jto/view?usp=sharing)
-
-[W&B plots](https://wandb.ai/kimihailv/dla_hw1/runs/yoey20bq/overview?workspace=user-kimihailv)
+1) Перейдите в директорию, содержащую папку с тестовыми данными.
+2) Склонируйте репозиторий:
+`git clone https://github.com/kimihailv/dla.git`
+3) Соберите образ для докера: `docker build -t kim_dla -f dla/hw1/container/main.dockerfile .`
+4) Запустите контейнер: `docker run -v $(pwd):/workspace --gpus="device=4" --cpuset-cpus="0-3" --memory="32gb"  --name kim_dla_hw1 -it kim_dla bash`
+5) Внутри контейнера: `python -m dla.hw1.utils.test -c dla/hw1/configs/test/test_las.json -t test_data -o out.json`

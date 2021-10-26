@@ -162,7 +162,7 @@ class TestDataset(torch.utils.data.Dataset):
         item = self.items[idx]
         wav, sr = load(item['audio_file'])
         data = {
-            'wav': wav.numpy()
+            'wav': wav[0].numpy()
         }
         if self.transcriptions:
             with open(item['text'], 'r') as f:
