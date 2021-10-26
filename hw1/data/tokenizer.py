@@ -1,4 +1,4 @@
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from abc import abstractmethod
 from random import randint
 from pathlib import Path

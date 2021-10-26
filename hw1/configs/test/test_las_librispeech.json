@@ -3,8 +3,8 @@
   "weights_dir": "dla/hw1/weights/las_librispeech-100-clean_bpe",
   "checkpoint_params": {
     "checkpoint_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/ckp_200.pt",
-    "checkpoint_link": "https://drive.google.com/file/d/17Hh7c0Ea0l6W2qQUNtb2r1KXWhQMURdL/view?usp=sharing",
-    "bpe_link": "https://drive.google.com/file/d/1p_V7kyZ6lT_BsuP66EQRZgRFX4rwG5Qr/view?usp=sharing",
+    "checkpoint_link": "https://drive.google.com/uc?id=17Hh7c0Ea0l6W2qQUNtb2r1KXWhQMURdL",
+    "bpe_link": "https://drive.google.com/uc?id=1p_V7kyZ6lT_BsuP66EQRZgRFX4rwG5Qr",
     "bpe_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/bpe_model_38536"
   },
 

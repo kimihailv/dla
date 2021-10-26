@@ -1,10 +1,12 @@
 import h5py
 import torch
+import gdown
 from torchaudio import load
 from pathlib import Path
 from torch.utils.data import Subset
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 from tqdm import tqdm
+from os.path import exists
 
 
 def filter_dataset(dataset, max_duration, max_target_len):
@@ -114,6 +116,9 @@ class Collator:
 
 class HDF5Dataset(torch.utils.data.Dataset):
     def __init__(self, tokenizer, root, url=None, download=True):
+        if not exists(root):
+            gdown.download('https://drive.google.com/uc?id=1CdyZtpi-rg0DW26ZVkBFxKDE-lUuElm7', root)
+
         self.sample_rate = 22050 if 'lj.h5' in root else 16000
         self.tokenizer = tokenizer
         if url is None:

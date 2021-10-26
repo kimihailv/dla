@@ -72,7 +72,7 @@ class Pipeline:
 
     def train_one_epoch(self, epoch_num):
         self.model.train()
-        bar = tqdm(self.train_loader, position=0, leave=True, desc=f'Epoch #{epoch_num}')
+        bar = tqdm(self.train_loader, position=0, leave=True, desc=f'Epoch {epoch_num}')
         running_loss = 0
         num_samples = 0
 

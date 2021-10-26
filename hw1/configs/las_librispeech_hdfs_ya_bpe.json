@@ -22,7 +22,7 @@
       "sr": 16000,
       "input_len_div_factor": 8,
       "constructor": "HDF5Dataset",
-      "root_dir": "/home/jupyter/mnt/s3/bucket-hse-rw/data/datasets/librispeech/librispeech.h5",
+      "root_dir": "dla/hw1/datasets/librispeech.h5",
       "tokenizer": {
         "constructor": "BPETokenizer",
         "args": {
