@@ -128,7 +128,7 @@ class BPETokenizer(BaseTokenizer):
         self.model_dir = ''
         self.fit(data)
 
-        if self.use_eos and self.use_bos:
+        if self.use_eos and self.use_bos and self.tokenizer is not None:
             self.ignore_ids = [self.tokenizer.subword_to_id('<BOS>'),
                                self.tokenizer.subword_to_id('<EOS>')]
 

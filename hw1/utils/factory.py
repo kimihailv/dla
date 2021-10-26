@@ -1,6 +1,6 @@
 from ..data.augmentations import *
 from ..data.tokenizer import Tokenizer, BPETokenizer
-from ..data.datasets import filter_dataset, LibrispeechDataset, LJDataset, HDF5Dataset
+from ..data.datasets import *
 from ..models import *
 from ..logging import WandbLogger
 from torchaudio.transforms import FrequencyMasking, TimeMasking
@@ -24,7 +24,6 @@ def CosineWithWarmup(
 
 inventory = {
     'model': {
-        'LSTM': LSTM,
         'QuartzNet': QuartzNet,
         'LAS': LAS
     },
@@ -49,7 +48,8 @@ inventory = {
     'dataset': {
         'Librispeech': LibrispeechDataset,
         'LJ': LJDataset,
-        'HDF5Dataset': HDF5Dataset
+        'HDF5Dataset': HDF5Dataset,
+        'TestDataset': TestDataset
     },
 
     'aug': {
@@ -71,7 +71,8 @@ inventory = {
     'text_decoder': {
         'CTCGreedyDecoder': CTCGreedyDecoder,
         'BeamSearchDecoder': BeamSearchDecoder,
-        'GreedyDecoder': GreedyDecoder
+        'GreedyDecoder': GreedyDecoder,
+        'Seq2SeqBeamSearchDecoder': Seq2SeqBeamSearchDecoder
     },
 
     'logger': {

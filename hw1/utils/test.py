@@ -2,12 +2,13 @@ import torch
 import gdown
 from os.path import exists
 from argparse import ArgumentParser
-from factory import make_generic, make_mel_transform
-from ..data.datasets import TestDataset, Collator
+from .factory import make_generic, make_mel_transform
+from ..data.datasets import Collator
 from ..eval.metrics import *
 from json import load, dump
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from pathlib import Path
 
 
 def parse_args():
@@ -32,22 +33,30 @@ def parse_args():
 
 
 def download_checkpoint(config):
-    if exists(config['checkpoint_dir']):
+    if exists(config['checkpoint_path']):
         return
 
-    gdown.download(config['checkpoint_link'], config['checkpoint_dir'])
+    gdown.download(config['checkpoint_link'], config['checkpoint_path'])
     if 'bpe_link' in config:
-        gdown.download(config['bpe_link'], config['bpe_dir'])
+        gdown.download(config['bpe_link'], config['bpe_path'])
 
 
 def make_test_loader(config, tokenizer_state, test_data_dir):
     tokenizer = make_generic('tokenizer', config['tokenizer_params'])
     tokenizer.load(tokenizer_state)
-    dataset = TestDataset(tokenizer, test_data_dir, config['dataset_params']['sr'])
-    mel_transform = make_mel_transform(config['dataset_params']['mel_transform'])
-    collator = Collator(wav_transform=None, mel_transform=mel_transform)
+    config['dataset_params']['args']['tokenizer'] = tokenizer
 
-    return DataLoader(dataset, batch_size=32, collate_fn=collator), tokenizer
+    if config['dataset_params']['constructor'] == 'TestDataset':
+        config['dataset_params']['args']['data_dir'] = test_data_dir
+
+    dataset = make_generic('dataset', config['dataset_params'])
+    mel_transform = make_mel_transform(config['dataset_params']['mel_transform'])
+    collator = Collator(wav_transform=None,
+                        mel_transform=mel_transform,
+                        input_len_div_factor=config['dataset_params']['input_len_div_factor'])
+
+    return DataLoader(dataset, batch_size=config['dataset_params']['batch_size'],
+                      collate_fn=collator), tokenizer
 
 
 @torch.no_grad()
@@ -74,7 +83,7 @@ def eval_model(out_file, model, device, test_loader, greedy_decoder, beam_search
             logprobs = model(batch, 'test')
 
         argmax_texts = greedy_decoder.decode(model, logprobs, batch['specs_len'])
-        bs_texts = beam_search_decoder.decode(model, batch, batch['specs_len'])
+        bs_texts = beam_search_decoder.decode(model, batch, batch['specs_len'], return_best=False)
 
         for argmax_text, bs_text, target in zip(argmax_texts, bs_texts, batch['text']):
             num_texts += 1
@@ -105,9 +114,11 @@ if __name__ == '__main__':
     with open(opts.c, 'r') as f:
         config = load(f)
 
+    Path(config['weights_dir']).mkdir(parents=True, exist_ok=True)
+
     # load checkpoint
     download_checkpoint(config['checkpoint_params'])
-    state = torch.load(config['checkpoint_params']['checkpoint_dir'])
+    state = torch.load(config['checkpoint_params']['checkpoint_path'])
 
     # create test loader and tokenizer
     test_dir = opts.t
@@ -121,13 +132,18 @@ if __name__ == '__main__':
         config['model']['args']['bos_idx'] = tokenizer.bos_token_id
         config['model']['args']['padding_idx'] = tokenizer.eps_token_id
 
-    model = make_generic('model', config['model'])
+    model = make_generic('model', config['model']).to(config['device'])
     model.load_state_dict(state['model'])
     model.eval()
 
     # create text decoders
 
     config['text_decoders']['greedy']['args']['tokenizer'] = tokenizer
+
+    if not exists(config['text_decoders']['beam_search']['args']['lm_weight_path']):
+        gdown.download(config['text_decoders']['beam_search']['lm_link'],
+                       config['text_decoders']['beam_search']['args']['lm_weight_path'])
+
     config['text_decoders']['beam_search']['args']['tokenizer'] = tokenizer
 
     greedy_decoder = make_generic('text_decoder', config['text_decoders']['greedy'])

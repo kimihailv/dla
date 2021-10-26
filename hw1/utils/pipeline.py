@@ -7,6 +7,7 @@ from tqdm import tqdm
 from os import environ
 from copy import deepcopy
 from pathlib import Path
+from argparse import ArgumentParser
 import numpy as np
 
 
@@ -217,3 +218,15 @@ class Pipeline:
         pipeline_params['logger_params']['args']['config'] = deepcopy(pipeline_params)
         environ['WANDB_API_KEY'] = pipeline_params['logger_params']['api_token']
         return cls(**pipeline_params)
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('-c',
+                        action='store',
+                        type=str,
+                        help='path to config file')
+    opts = parser.parse_args()
+
+    pipeline = Pipeline.from_config_file(opts.c)
+    pipeline.train()

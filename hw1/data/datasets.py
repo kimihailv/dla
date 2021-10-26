@@ -1,10 +1,10 @@
 import h5py
 import torch
-from librosa import load
+from torchaudio import load
+from pathlib import Path
 from torch.utils.data import Subset
 from torchaudio.datasets import LJSPEECH, LIBRISPEECH
 from tqdm import tqdm
-from glob import glob
 
 
 def filter_dataset(dataset, max_duration, max_target_len):
@@ -146,19 +146,31 @@ class TestDataset(torch.utils.data.Dataset):
     def __init__(self, tokenizer, data_dir, sr):
         super().__init__()
         self.tokenizer = tokenizer
-        self.data_dir = data_dir
-        self.ids = [f.split('/')[-1][:-4] for f in glob(f'{data_dir}/audio/*.wav')]
+        # self.data_dir = data_dir
+        # self.ids = [f.split('/')[-1][:-5] for f in glob(f'{data_dir}/audio/*.flac')]
+        self.items = []
+        self.transcriptions = (Path(data_dir) / 'transcriptions').exists()
+        for path in (Path(data_dir) / 'audio').iterdir():
+            if path.suffix in ['.mp3', '.wav', '.flac', '.m4a']:
+                item = {'audio_file': str(path)}
+                if self.transcriptions:
+                    item['text'] = str(Path(data_dir) / 'transcriptions' / f'{path.stem}.txt')
+                self.items.append(item)
         self.sr = sr
 
     def __getitem__(self, idx):
-        idx = self.ids[idx]
-        wav = load(f'{self.data_dir}/audio/{idx}.wav', sr=self.sr)
+        item = self.items[idx]
+        wav, sr = load(item['audio_file'])
         data = {
-            'wav': wav
+            'wav': wav.numpy()
         }
-        with open(f'{self.data_dir}/transcriptions/{idx}.wav', 'r') as f:
-            text = f.read().strip()
-            data['target_tokens_idx'] = self.tokenizer.encode(text)
-            data['text'] = text
+        if self.transcriptions:
+            with open(item['text'], 'r') as f:
+                text = f.read().strip()
+                data['target_tokens_idx'] = self.tokenizer.encode(text)
+                data['text'] = text
 
         return data
+
+    def __len__(self):
+        return len(self.items)
