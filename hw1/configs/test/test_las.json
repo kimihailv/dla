@@ -66,7 +66,7 @@
 
     "beam_search": {
       "constructor": "Seq2SeqBeamSearchDecoder",
-      "lm_link": "https://drive.google.com/uc?id=1rgbs9bkvVdU3Oo_jxhupUmuMYB9lnOJj",
+      "lm_link": "",
       "args": {
         "tokenizer": null,
         "max_len": 50,

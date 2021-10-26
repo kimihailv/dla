@@ -69,7 +69,7 @@
       "lm_link": "https://drive.google.com/uc?id=1rgbs9bkvVdU3Oo_jxhupUmuMYB9lnOJj",
       "args": {
         "tokenizer": null,
-        "max_len": 30,
+        "max_len": 50,
         "device": "cuda:0",
         "beam_size": 35,
         "lm_weight_path": "dla/hw1/weights/las_librispeech-100-clean_bpe/lm.pt",

@@ -125,7 +125,7 @@ class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
                 states[beam_idx] = (prev_state, prev_context)
                 logprobs = torch.nn.functional.log_softmax(logits, dim=-1)
 
-                candidate_scores[:, beam_idx] = logprobs # bs x vocab_size
+                candidate_scores[:, beam_idx] = logprobs  # bs x vocab_size
                 candidate_scores[:, beam_idx] += scores[:, beam_idx].unsqueeze(1)
 
             candidate_scores = candidate_scores.reshape(encoded.size(0), -1) # bs x beam_size*vocab_size
@@ -133,6 +133,7 @@ class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
             candidate_scores, flat_index = torch.topk(candidate_scores, self.beam_size, dim=1)
             beam_idx = flat_index // vocab_size
             new_token_idx = flat_index % vocab_size
+
             beams = torch.gather(beams, 1, beam_idx.unsqueeze(2).expand(-1, -1, beams.size(2)))
             beams = torch.cat([beams, new_token_idx.unsqueeze(2)], dim=2)
 
@@ -160,6 +161,7 @@ class Seq2SeqBeamSearchDecoder(BaseTextDecoder):
         sorted_ids = torch.argsort(scores, dim=1, descending=True)
         beams = torch.gather(beams, 1, sorted_ids.unsqueeze(2).expand(-1, -1, beams.size(2)))
         texts = []
+
         for batch_beams in beams:
             decoded_beams = []
             for beam in batch_beams:
