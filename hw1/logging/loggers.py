@@ -10,12 +10,12 @@ class WandbLogger:
     def log(self, data):
         self.run.log(data)
 
-    def add_row(self, epoch, wav, mel_spec, src, tgt, split):
-        columns = ['epoch', 'wav', 'mel_spec', 'src', 'tgt']
+    def add_row(self, epoch, wav, text, tgt_mel_spec, src_mel_spec, split):
+        columns = ['epoch', 'wav', 'text', 'tgt_mel_spec', 'src_mel_spec']
         history = []
-        sr = self.run.config['dataset_params']['common']['sr']
-        wav = wandb.Audio(wav, sample_rate=sr)
-        spec = wandb.Image(mel_spec)
+        wav = wandb.Audio(wav, sample_rate=22050)
+        tgt_spec = wandb.Image(tgt_mel_spec)
+        src_spec = wandb.Image(src_mel_spec)
 
         if self.cur_tables[split] is None:
             if self.prev_tables[split] is not None:
@@ -24,7 +24,7 @@ class WandbLogger:
             history.append([epoch, wav, spec, src, tgt])
             self.cur_tables[split] = wandb.Table(data=history, columns=columns)
         else:
-            self.cur_tables[split].add_data(epoch, wav, spec, src, tgt)
+            self.cur_tables[split].add_data(epoch, wav, text, tgt_spec, src_spec)
 
     def push_table(self, split):
         self.run.log({f'{split}_examples': self.cur_tables[split]})
