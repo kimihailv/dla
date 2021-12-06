@@ -8,7 +8,7 @@ __Checkpoint__:
 
 __Final__:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ZLOV70Wgk0_jluFJKM3-kBuRO-HJ1p5A?authuser=1#scrollTo=poM9C0COfhlw)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ZLOV70Wgk0_jluFJKM3-kBuRO-HJ1p5A?usp=sharing)
 
 [Отчёт](https://bronze-colony-d62.notion.site/DLA-3-cce0df65c32a4518b10ab963989e9ae1)
 
