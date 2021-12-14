@@ -1,5 +1,4 @@
-import torch
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from utils import *
 
 
