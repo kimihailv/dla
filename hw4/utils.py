@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 from torchaudio import transforms
 
 
@@ -14,6 +15,11 @@ def init_model(model):
 def set_requires_grad(model, flag):
     for p in model.parameters():
         p.requires_grad = flag
+
+
+def seed(seed):
+    torch.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
 
 
 class Featurizer(nn.Module):
