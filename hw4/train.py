@@ -168,6 +168,9 @@ def train(train_loader, val_loader,
                     'train_epoch_d_loss': train_d_loss,
                     'epoch': epoch})
 
+        g_scheduler.step()
+        d_scheduler.step()
+
         if epoch % val_every == 0:
             val_g_loss, val_d_loss = validate(val_loader, epoch, generator,
                                               msd, mpd, fm_loss, adversarial_loss,
