@@ -25,11 +25,11 @@ class AdversarialLoss(nn.Module):
     def calc_discriminator_loss(self, gen_logits, real_logits):
         loss = 0
         for gl, rl in zip(gen_logits, real_logits):
-            mse_gen = ((gl - self.fake_label) ** 2).mean()
-            mse_real = ((rl - self.real_label) ** 2).mean()
-            loss += mse_real + mse_gen
+            mse_gen = ((gl - self.fake_label)**2).mean()
+            mse_real = ((rl - self.real_label)**2).mean()
+            loss += (mse_real + mse_gen)
 
-        return loss * 0.5
+        return loss
 
     def calc_generator_loss(self, gen_logits):
         loss = 0
