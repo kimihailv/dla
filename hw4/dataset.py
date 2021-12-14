@@ -17,7 +17,7 @@ class LJSpeechDataset(torch.utils.data.Dataset):
         waveform = torch.from_numpy(normalize(item['wav'][:])) * 0.95
 
         if waveform.size(0) > self.segment_len:
-            start = torch.randint(0, waveform.size(0) - self.segment_len)
+            start = torch.randint(0, waveform.size(0) - self.segment_len, size=(1,)).item()
             waveform = waveform[start:start + self.segment_len]
         else:
             waveform = torch.nn.functional.pad(waveform, (0, self.segment_len - waveform.size(0)))

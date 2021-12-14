@@ -18,7 +18,7 @@ def train_epoch(train_loader, epoch_num,
     bar = tqdm(train_loader)
     for wavs, _ in bar:
         wavs = wavs.to(device)
-        spec = featurizer(wavs)
+        spec = featurizer(wavs.squeeze(1))
         wavs_pred = generator(spec)
 
         set_requires_grad(mpd, True)
@@ -55,7 +55,7 @@ def train_epoch(train_loader, epoch_num,
         adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits, mpd_real_logits)
         adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits, msd_real_logits)
 
-        spec_pred = featurizer(wavs_pred)
+        spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
 
         g_loss = adv_loss + 45 * (mpd_loss_fm + msd_loss_fm) + 2 * rec_loss
@@ -97,7 +97,7 @@ def validate(loader, epoch_num, generator, msd, mpd,
     bar = tqdm(loader)
     for wavs, _ in bar:
         wavs = wavs.to(device)
-        spec = featurizer(wavs)
+        spec = featurizer(wavs.squeeze(1))
         wavs_pred = generator(spec)
 
         gen_logits, _ = mpd(wavs_pred.detach())
@@ -125,7 +125,7 @@ def validate(loader, epoch_num, generator, msd, mpd,
         adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits, mpd_real_logits)
         adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits, msd_real_logits)
 
-        spec_pred = featurizer(wavs_pred)
+        spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
 
         g_loss = adv_loss + 45 * (mpd_loss_fm + msd_loss_fm) + 2 * rec_loss
@@ -169,10 +169,9 @@ def train(train_loader, val_loader,
                     'epoch': epoch})
 
         if epoch % val_every == 0:
-            val_g_loss, val_d_loss = validate(val_loader,
-                                              generator, msd, mpd,
-                                              fm_loss, adversarial_loss,
-                                              mel_loss, featurizer, device)
+            val_g_loss, val_d_loss = validate(val_loader, epoch, generator,
+                                              msd, mpd, fm_loss, adversarial_loss,
+                                              mel_loss, featurizer, device, logger)
 
             logger.log({'val_epoch_g_loss': val_g_loss,
                         'val_epoch_d_loss': val_d_loss,
