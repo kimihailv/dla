@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import weight_norm, spectral_norm
-from utils import init_model
+from utils import init_weight
 
 
 class ResBlock(nn.Module):
@@ -15,7 +15,7 @@ class ResBlock(nn.Module):
                                           kernel_size=kernel_size,
                                           dilation=dilation,
                                           padding=padding_size))
-        init_model(self.conv)
+        init_weight(self.conv)
 
     def forward(self, x):
         return x + self.conv(self.leaky_relu(x))
@@ -39,8 +39,8 @@ class DoubleResBlock(nn.Module):
                                            dilation=dilations[1],
                                            padding=padding_size))
 
-        init_model(self.conv1)
-        init_model(self.conv2)
+        init_weight(self.conv1)
+        init_weight(self.conv2)
 
     def forward(self, x):
         x = self.conv1(self.leaky_relu(x))
@@ -116,7 +116,7 @@ class Generator(nn.Module):
                                                                 stride=kernel_size // 2,
                                                                 padding=(kernel_size - kernel_size // 2) // 2)))
 
-            init_model(self.upsample[-1])
+            init_weight(self.upsample[-1])
             self.upsample.append(MRF(out_channels, out_channels,
                                      resblocks_kernel_sizes,
                                      resblocks_dilations))
@@ -125,7 +125,7 @@ class Generator(nn.Module):
 
         self.upsample = nn.Sequential(*self.upsample)
         self.conv_last = weight_norm(nn.Conv1d(in_channels, 1, 7, 1, padding=3))
-        init_model(self.conv_last)
+        init_weight(self.conv_last)
 
     def forward(self, x):
         x = self.conv_init(x)
