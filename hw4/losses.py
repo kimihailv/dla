@@ -2,15 +2,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class MelLoss(nn.Module):
-    def __init__(self, featurizer):
-        super().__init__()
-        self.featurizer = featurizer
-
-    def forward(self, pred_spec, spec):
-        return F.l1_loss(pred_spec, spec)
-
-
 class FeatureMatchingLoss(nn.Module):
     def __init__(self):
         super().__init__()

@@ -27,7 +27,9 @@ class Featurizer(nn.Module):
             n_mels=80,
             center=False
         )
+        self.pad_size = (1024 - 256) // 2
 
     def forward(self, x):
+        x = nn.functional.pad(x, (self.pad_size, self.pad_size), 'reflect')
         spec = self.featurizer(x)
         return spec.clamp(min=1e-5).log()

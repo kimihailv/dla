@@ -16,7 +16,7 @@ def train_epoch(train_loader, epoch_num,
     mpd.train()
 
     bar = tqdm(train_loader)
-    for wavs, _ in bar:
+    for wavs in bar:
         wavs = wavs.to(device)
         spec = featurizer(wavs.squeeze(1))
         wavs_pred = generator(spec)
@@ -95,7 +95,7 @@ def validate(loader, epoch_num, generator, msd, mpd,
     to_log = 5
 
     bar = tqdm(loader)
-    for wavs, _ in bar:
+    for wavs in bar:
         wavs = wavs.to(device)
         spec = featurizer(wavs.squeeze(1))
         wavs_pred = generator(spec)
