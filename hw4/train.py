@@ -52,8 +52,8 @@ def train_epoch(train_loader, epoch_num,
 
         msd_loss_fm = fm_loss(gen_features, real_features)
 
-        adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits, mpd_real_logits)
-        adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits, msd_real_logits)
+        adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits)
+        adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits)
 
         spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
@@ -122,8 +122,8 @@ def validate(loader, epoch_num, generator, msd, mpd,
 
         msd_loss_fm = fm_loss(gen_features, real_features)
 
-        adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits, mpd_real_logits)
-        adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits, msd_real_logits)
+        adv_loss = adversarial_loss.calc_generator_loss(mpd_gen_logits)
+        adv_loss += adversarial_loss.calc_generator_loss(msd_gen_logits)
 
         spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
