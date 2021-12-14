@@ -2,6 +2,8 @@ import torch
 import h5py
 from librosa.util import normalize
 
+MAX_WAV_VALUE = 32768.0
+
 
 class LJSpeechDataset(torch.utils.data.Dataset):
 
@@ -14,7 +16,7 @@ class LJSpeechDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index: int):
         item = self.data[str(index)]
-        waveform = torch.from_numpy(normalize(item['wav'][:])) * 0.95
+        waveform = torch.from_numpy(normalize(item['wav'][:] / MAX_WAV_VALUE)) * 0.95
 
         if waveform.size(0) > self.segment_len:
             start = torch.randint(0, waveform.size(0) - self.segment_len, size=(1,)).item()

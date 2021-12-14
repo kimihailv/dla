@@ -57,7 +57,7 @@ def train_epoch(train_loader, epoch_num,
         spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
 
-        g_loss = adv_loss + 45 * (mpd_loss_fm + msd_loss_fm) + 2 * rec_loss
+        g_loss = adv_loss + 2 * (mpd_loss_fm + msd_loss_fm) + 45 * rec_loss
         g_loss.backward()
         g_optimizer.step()
 
@@ -127,7 +127,7 @@ def validate(loader, epoch_num, generator, msd, mpd,
         spec_pred = featurizer(wavs_pred.squeeze(1))
         rec_loss = mel_loss(spec_pred, spec)
 
-        g_loss = adv_loss + 45 * (mpd_loss_fm + msd_loss_fm) + 2 * rec_loss
+        g_loss = adv_loss + 2 * (mpd_loss_fm + msd_loss_fm) + 45 * rec_loss
 
         num_samples += 1
         running_g_loss += g_loss.item()
