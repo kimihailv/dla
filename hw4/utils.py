@@ -3,6 +3,7 @@ import torch
 import librosa
 from torchaudio import transforms
 from dataclasses import dataclass
+from librosa.util import normalize
 
 
 def init_weight(m):
@@ -23,6 +24,17 @@ def set_requires_grad(model, flag):
 def seed(seed):
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = False
+
+
+def preprocess_wav(wav):
+    return torch.from_numpy(normalize(wav / 32768.0)) * 0.95
+
+
+@torch.no_grad()
+def spec_to_wav(generator, spec):
+    generator.eval()
+    wav = generator(spec)
+    return wav
 
 
 @dataclass
